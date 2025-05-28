@@ -10,7 +10,7 @@ const FurnitureCustomize = () => {
     startPlacingBackrest?: () => void;
   }>({});
   const [selectedCategory, setSelectedCategory] = useState("sofa");
-  const [selectedColor, setSelectedColor] = useState("#FFD763"); // Default to first color (yellow)
+  const [selectedColor, setSelectedColor] = useState("#FFD763"); 
   const [showBanner, setShowBanner] = useState(true);
   const [showMenu, setShowMenu] = useState(false);
   const [showSocialLinks, setShowSocialLinks] = useState(false);
@@ -220,7 +220,7 @@ const FurnitureCustomize = () => {
 
       {/* Slide Panel Container */}
       <div
-        className={`fixed top-0 right-0 bottom-0 w-full md:w-[400px] bg-white z-50 flex flex-col overflow-y-auto transition-transform duration-500 ease-in-out ${showMenu ? 'translate-y-0' : '-translate-y-full'}`}
+        className={`fixed top-0 right-0 bottom-0 w-full md:w-[400px] bg-white z-50 flex flex-col overflow-hidden transition-all duration-300 ease-in-out ${showMenu ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}
       >
         <div className="flex justify-end flex-col p-5 pb-0">
           <div className="flex flex-row justify-between">
@@ -243,19 +243,31 @@ const FurnitureCustomize = () => {
           </div>
 
           <div className="flex-1 flex flex-col relative">
-            <div className={`transition-opacity duration-1000 absolute inset-0 ${menuView === 'login' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
+            <div className={`transition-all duration-500 absolute inset-0 ${menuView === 'login' ? 'opacity-100 z-10 transform translate-x-0' : 'opacity-0 z-0 pointer-events-none transform translate-x-full'}`}>
               <LoginCard className="mx-auto" />
             </div>
 
-            <nav className={`space-y-2 text-4xl font-bold w-full pl-12 mt-8 transition-opacity duration-1000 absolute inset-0 ${menuView === 'menu' ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'}`}>
+            <nav className={`space-y-2 text-4xl font-bold w-full pl-12 mt-8 transition-all duration-500 absolute inset-0 ${menuView === 'menu' ? 'opacity-100 z-10 transform translate-x-0' : 'opacity-0 z-0 pointer-events-none transform -translate-x-full'}`}>
 
-              <div><button onClick={() => setMenuView('login')} className="block p-0 text-left w-full text-4xl font-bold">Sign-up/Log in</button></div>
-              <div><a href="#" className="block">Play Games</a></div>
-              <div><a href="https://aroomy.com" target="_blank" rel="noopener noreferrer" className="block">Aroomy App</a></div>
-              <div><a href="https://mall.aroomy.com" target="_blank" rel="noopener noreferrer" className="block">Aroomy Mall</a></div>
-              <div><a href="https://mall.aroomy.com/mochi-sofa" target="_blank" rel="noopener noreferrer" className="block">Mochi Sofa</a></div>
-              <div><a href="https://aroomy.com/support" target="_blank" rel="noopener noreferrer" className="block">Support</a></div>
-              <div>
+              <div className="transition-opacity duration-300 delay-[0ms]" style={{opacity: showMenu && menuView === 'menu' ? 1 : 0}}>
+                <button onClick={() => setMenuView('login')} className="block p-0 text-left w-full text-4xl font-bold">Sign-up/Log in</button>
+              </div>
+              <div className="transition-opacity duration-300 delay-[50ms]" style={{opacity: showMenu && menuView === 'menu' ? 1 : 0}}>
+                <a href="#" className="block">Play Games</a>
+              </div>
+              <div className="transition-opacity duration-300 delay-[100ms]" style={{opacity: showMenu && menuView === 'menu' ? 1 : 0}}>
+                <a href="https://aroomy.com" target="_blank" rel="noopener noreferrer" className="block">Aroomy App</a>
+              </div>
+              <div className="transition-opacity duration-300 delay-[150ms]" style={{opacity: showMenu && menuView === 'menu' ? 1 : 0}}>
+                <a href="https://mall.aroomy.com" target="_blank" rel="noopener noreferrer" className="block">Aroomy Mall</a>
+              </div>
+              <div className="transition-opacity duration-300 delay-[200ms]" style={{opacity: showMenu && menuView === 'menu' ? 1 : 0}}>
+                <a href="https://mall.aroomy.com/mochi-sofa" target="_blank" rel="noopener noreferrer" className="block">Mochi Sofa</a>
+              </div>
+              <div className="transition-opacity duration-300 delay-[250ms]" style={{opacity: showMenu && menuView === 'menu' ? 1 : 0}}>
+                <a href="https://aroomy.com/support" target="_blank" rel="noopener noreferrer" className="block">Support</a>
+              </div>
+              <div className="transition-opacity duration-300 delay-[300ms]" style={{opacity: showMenu && menuView === 'menu' ? 1 : 0}}>
                 <button
                   onClick={() => setShowSocialLinks(!showSocialLinks)}
                   className="flex text-4xl font-bold pl-0 items-center justify-between w-full"
@@ -272,14 +284,28 @@ const FurnitureCustomize = () => {
                     <path d="M7 10L12 15L17 10" stroke="#333A3F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
-                <div className={`pl-28 font-normal space-y-3 mt-3 text-2xl transition-all duration-1000 ${showSocialLinks ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-                  <div><a href="https://www.instagram.com/aroomy.home" target="_blank" rel="noopener noreferrer" className="block">Instagram</a></div>
-                  <div><a href="https://www.tiktok.com/@aroomy1home" target="_blank" rel="noopener noreferrer" className="block">TikTok</a></div>
-                  <div><a href="https://www.youtube.com/@aroomyhome" target="_blank" rel="noopener noreferrer" className="block">YouTube</a></div>
-                  <div><a href="https://x.com/AroomyHome" target="_blank" rel="noopener noreferrer" className="block">X</a></div>
-                  <div><a href="https://www.pinterest.com/Aroomyhome" target="_blank" rel="noopener noreferrer" className="block">Pinterest</a></div>
-                  <div><a href="https://www.facebook.com/aroomyhome" target="_blank" rel="noopener noreferrer" className="block">Facebook</a></div>
-                  <div><a href="https://www.linkedin.com/company/aroomy" target="_blank" rel="noopener noreferrer" className="block">LinkedIn</a></div>
+                <div className={`pl-28 font-normal space-y-3 mt-3 text-2xl transition-all duration-1000 ${showSocialLinks ? 'max-h-[500px]' : 'max-h-0 overflow-hidden'}`}>
+                  <div className="transition-opacity duration-300 delay-[0ms]" style={{opacity: showMenu && showSocialLinks ? 1 : 0}}>
+                    <a href="https://www.instagram.com/aroomy.home" target="_blank" rel="noopener noreferrer" className="block">Instagram</a>
+                  </div>
+                  <div className="transition-opacity duration-300 delay-[50ms]" style={{opacity: showMenu && showSocialLinks ? 1 : 0}}>
+                    <a href="https://www.tiktok.com/@aroomy1home" target="_blank" rel="noopener noreferrer" className="block">TikTok</a>
+                  </div>
+                  <div className="transition-opacity duration-300 delay-[100ms]" style={{opacity: showMenu && showSocialLinks ? 1 : 0}}>
+                    <a href="https://www.youtube.com/@aroomyhome" target="_blank" rel="noopener noreferrer" className="block">YouTube</a>
+                  </div>
+                  <div className="transition-opacity duration-300 delay-[150ms]" style={{opacity: showMenu && showSocialLinks ? 1 : 0}}>
+                    <a href="https://x.com/AroomyHome" target="_blank" rel="noopener noreferrer" className="block">X</a>
+                  </div>
+                  <div className="transition-opacity duration-300 delay-[200ms]" style={{opacity: showMenu && showSocialLinks ? 1 : 0}}>
+                    <a href="https://www.pinterest.com/Aroomyhome" target="_blank" rel="noopener noreferrer" className="block">Pinterest</a>
+                  </div>
+                  <div className="transition-opacity duration-300 delay-[250ms]" style={{opacity: showMenu && showSocialLinks ? 1 : 0}}>
+                    <a href="https://www.facebook.com/aroomyhome" target="_blank" rel="noopener noreferrer" className="block">Facebook</a>
+                  </div>
+                  <div className="transition-opacity duration-300 delay-[300ms]" style={{opacity: showMenu && showSocialLinks ? 1 : 0}}>
+                    <a href="https://www.linkedin.com/company/aroomy" target="_blank" rel="noopener noreferrer" className="block">LinkedIn</a>
+                  </div>
                 </div>
               </div>
             </nav>
