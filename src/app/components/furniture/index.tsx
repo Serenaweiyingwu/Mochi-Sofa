@@ -1,20 +1,22 @@
 import React, { useState, useRef } from "react";
-import Head from "next/head";
 import Image from "next/image";
-import LoginCard from "../login/LoginCard";
 import Scene from "../Scene";
+import DesignScoreModal from "./DesignScoreModal";
+import SideMenu from "./SideMenu";
 
 const FurnitureCustomize = () => {
   const [sceneAPI, setSceneAPI] = useState<{
     startPlacingSeat?: () => void;
     startPlacingBackrest?: () => void;
   }>({});
-  const [selectedCategory, setSelectedCategory] = useState("sofa");
-  const [selectedColor, setSelectedColor] = useState("#FFD763"); 
+  const [selectedCategory] = useState("sofa");
+  const [selectedColor, setSelectedColor] = useState("#FFD763");
   const [showBanner, setShowBanner] = useState(true);
   const [showMenu, setShowMenu] = useState(false);
   const [showSocialLinks, setShowSocialLinks] = useState(false);
-  const [menuView, setMenuView] = useState<'menu' | 'login'>('menu');
+  const [showDesignScore, setShowDesignScore] = useState(false);
+  const [showDiscount, setShowDiscount] = useState(false);
+  const [menuView, setMenuView] = useState<"menu" | "login">("menu");
   const colorContainerRef = useRef<HTMLDivElement>(null);
 
   const categories = [
@@ -31,36 +33,40 @@ const FurnitureCustomize = () => {
     // Add more color options as needed
   ];
 
-  const handleCategorySelect = (categoryId: string) => {
-    setSelectedCategory(categoryId);
-  };
-
   const handleColorSelect = (colorValue: string) => {
     setSelectedColor(colorValue);
   };
 
   const handleComplete = () => {
-    // Handle completion logic here
+    // Show the design score modal
+    setShowDesignScore(true);
     console.log("Completed with:", { selectedCategory, selectedColor });
-    // Navigate to next page or show confirmation
+  };
+
+  const handleApplyDiscount = () => {
+    // Toggle discount display
+    setShowDiscount(!showDiscount);
+    console.log("Applying bonus discount");
+  };
+
+  const handleCheckout = () => {
+    // Checkout logic here
+    console.log("Proceeding to checkout");
+    setShowDesignScore(false);
   };
 
   const handleColorScroll = () => {
     if (colorContainerRef.current) {
-      colorContainerRef.current.scrollBy({ left: 60, behavior: 'smooth' });
+      colorContainerRef.current.scrollBy({ left: 60, behavior: "smooth" });
     }
   };
 
+  function toggleSocialLinks(): void {
+    setShowSocialLinks(!showSocialLinks);
+  }
+
   return (
     <>
-      <Head>
-        <title>Customize Furniture | Aroomy</title>
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
-        />
-      </Head>
-
       <div className="flex flex-col h-full min-h-screen bg-white relative">
         {/* Header */}
         <header className="px-5 py-6 flex justify-between items-center">
@@ -75,24 +81,61 @@ const FurnitureCustomize = () => {
           </div>
           <div className="flex items-center">
             <button className="relative p-2">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path fillRule="evenodd" clipRule="evenodd" d="M9.5 21C10.3284 21 11 20.3284 11 19.5C11 18.6716 10.3284 18 9.5 18C8.67157 18 8 18.6716 8 19.5C8 20.3284 8.67157 21 9.5 21Z" fill="#1A305B" />
-                <path fillRule="evenodd" clipRule="evenodd" d="M17.5 21C18.3284 21 19 20.3284 19 19.5C19 18.6716 18.3284 18 17.5 18C16.6716 18 16 18.6716 16 19.5C16 20.3284 16.6716 21 17.5 21Z" fill="#1A305B" />
-                <path d="M3 3C2.44772 3 2 3.44772 2 4C2 4.55228 2.44772 5 3 5H3.43845C3.89731 5 4.2973 5.3123 4.40859 5.75746L6.65112 14.7276C6.985 16.0631 8.18495 17 9.56155 17H17.3957C18.8018 17 20.0192 16.0234 20.3242 14.6508L21.4353 9.65079C21.8517 7.77725 20.426 6 18.5068 6H6.53078L6.34888 5.27239C6.015 3.93689 4.81505 3 3.43845 3H3Z" fill="#1A305B" />
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M9.5 21C10.3284 21 11 20.3284 11 19.5C11 18.6716 10.3284 18 9.5 18C8.67157 18 8 18.6716 8 19.5C8 20.3284 8.67157 21 9.5 21Z"
+                  fill="#1A305B"
+                />
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M17.5 21C18.3284 21 19 20.3284 19 19.5C19 18.6716 18.3284 18 17.5 18C16.6716 18 16 18.6716 16 19.5C16 20.3284 16.6716 21 17.5 21Z"
+                  fill="#1A305B"
+                />
+                <path
+                  d="M3 3C2.44772 3 2 3.44772 2 4C2 4.55228 2.44772 5 3 5H3.43845C3.89731 5 4.2973 5.3123 4.40859 5.75746L6.65112 14.7276C6.985 16.0631 8.18495 17 9.56155 17H17.3957C18.8018 17 20.0192 16.0234 20.3242 14.6508L21.4353 9.65079C21.8517 7.77725 20.426 6 18.5068 6H6.53078L6.34888 5.27239C6.015 3.93689 4.81505 3 3.43845 3H3Z"
+                  fill="#1A305B"
+                />
               </svg>
-
             </button>
             <button className="p-2 ml-2" onClick={() => setShowMenu(true)}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path fillRule="evenodd" clipRule="evenodd" d="M4 16C4 15.4477 4.44772 15 5 15H19C19.5523 15 20 15.4477 20 16C20 16.5523 19.5523 17 19 17H5C4.44772 17 4 16.5523 4 16Z" fill="#1A305B" />
-                <path fillRule="evenodd" clipRule="evenodd" d="M4 8C4 7.44772 4.44772 7 5 7H19C19.5523 7 20 7.44772 20 8C20 8.55228 19.5523 9 19 9H5C4.44772 9 4 8.55228 4 8Z" fill="#1A305B" />
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M4 16C4 15.4477 4.44772 15 5 15H19C19.5523 15 20 15.4477 20 16C20 16.5523 19.5523 17 19 17H5C4.44772 17 4 16.5523 4 16Z"
+                  fill="#1A305B"
+                />
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M4 8C4 7.44772 4.44772 7 5 7H19C19.5523 7 20 7.44772 20 8C20 8.55228 19.5523 9 19 9H5C4.44772 9 4 8.55228 4 8Z"
+                  fill="#1A305B"
+                />
               </svg>
             </button>
           </div>
         </header>
 
         {/* Notification Banner */}
-        <div className="flex-col flex relative" style={{ height: 'calc(100vh - 88px - 416px)' }}>
+        <div
+          className="flex-col flex relative"
+          style={{ height: "calc(100vh - 88px - 416px)" }}
+        >
           <div className="flex absolute top-0 left-0 right-0 justify-center px-4 items-center h-10">
             {showBanner && (
               <div className="bg-[#CBF1FF] w-full px-5 py-1.5 text-xl font-normal font-nunito flex items-center justify-between">
@@ -153,7 +196,9 @@ const FurnitureCustomize = () => {
               <div key={category.id} className="flex flex-col items-center">
                 <button
                   onClick={() => {
-                    category.id === "sofa" ? sceneAPI.startPlacingSeat?.() : sceneAPI.startPlacingBackrest?.();
+                    category.id === "sofa"
+                      ? sceneAPI.startPlacingSeat?.()
+                      : sceneAPI.startPlacingBackrest?.();
                   }}
                   key={category.id}
                   className={`relative flex p-0 w-24 h-20 flex-col items-center justify-center rounded-[20px] border-2 overflow-hidden border-[#5CB2D180]`}
@@ -169,14 +214,16 @@ const FurnitureCustomize = () => {
           <div className="mb-8">
             <h2 className="text-xl font-extrabold mb-3">Color</h2>
             <div className="flex">
-              <div ref={colorContainerRef} className="flex items-center gap-6 overflow-x-auto py-2 px-1 scroll-smooth">
+              <div
+                ref={colorContainerRef}
+                className="flex items-center gap-6 overflow-x-auto py-2 px-1 scroll-smooth"
+              >
                 {colors.map((color, index) => (
                   <button
                     key={color.id}
-                    className={`w-10 h-10 p-0 rounded-full border-[#E6E6E6] flex-shrink-0 ${selectedColor === color.value
-                      ? "border-4"
-                      : "border-1"
-                      }`}
+                    className={`w-10 h-10 p-0 rounded-full border-[#E6E6E6] flex-shrink-0 ${
+                      selectedColor === color.value ? "border-4" : "border-1"
+                    }`}
                     style={{ backgroundColor: color.value }}
                     onClick={() => handleColorSelect(color.value)}
                     aria-label={`Select ${color.id} color`}
@@ -192,9 +239,29 @@ const FurnitureCustomize = () => {
                 className="flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity ml-1"
                 aria-label="Scroll colors"
               >
-                <svg width="21" height="32" viewBox="0 0 21 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect x="20.5" y="31" width="20" height="30" rx="10" transform="rotate(180 20.5 31)" fill="white" stroke="#DAE8EE" />
-                  <path fillRule="evenodd" clipRule="evenodd" d="M8.40717 21.9053C8.11428 21.6124 8.11428 21.1376 8.40717 20.8447L12.7518 16.5L8.40717 12.1553C8.11428 11.8624 8.11428 11.3876 8.40717 11.0947C8.70006 10.8018 9.17494 10.8018 9.46783 11.0947L13.8125 15.4393C14.3983 16.0251 14.3983 16.9749 13.8125 17.5607L9.46783 21.9053C9.17494 22.1982 8.70006 22.1982 8.40717 21.9053Z" fill="#6F767E" />
+                <svg
+                  width="21"
+                  height="32"
+                  viewBox="0 0 21 32"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <rect
+                    x="20.5"
+                    y="31"
+                    width="20"
+                    height="30"
+                    rx="10"
+                    transform="rotate(180 20.5 31)"
+                    fill="white"
+                    stroke="#DAE8EE"
+                  />
+                  <path
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M8.40717 21.9053C8.11428 21.6124 8.11428 21.1376 8.40717 20.8447L12.7518 16.5L8.40717 12.1553C8.11428 11.8624 8.11428 11.3876 8.40717 11.0947C8.70006 10.8018 9.17494 10.8018 9.46783 11.0947L13.8125 15.4393C14.3983 16.0251 14.3983 16.9749 13.8125 17.5607L9.46783 21.9053C9.17494 22.1982 8.70006 22.1982 8.40717 21.9053Z"
+                    fill="#6F767E"
+                  />
                 </svg>
               </button>
             </div>
@@ -212,106 +279,34 @@ const FurnitureCustomize = () => {
         {/* Complete Button */}
       </div>
 
+      {/* Design Score Modal */}
+      <DesignScoreModal 
+          isOpen={showDesignScore}
+          onClose={() => {setShowDesignScore(false); setShowDiscount(false);}}
+          onApplyDiscount={handleApplyDiscount}
+          onCheckout={handleCheckout}
+          showDiscount={showDiscount}
+        />
+
       {/* Side Menu Background Overlay */}
       <div
-        className={`fixed inset-0 bg-black transition-opacity duration-500 z-40 ${showMenu ? 'bg-opacity-50 opacity-100' : 'bg-opacity-0 opacity-0 pointer-events-none'}`}
+        className={`fixed inset-0 bg-black transition-opacity duration-500 z-40 ${
+          showMenu
+            ? "bg-opacity-50 opacity-100"
+            : "bg-opacity-0 opacity-0 pointer-events-none"
+        }`}
         onClick={() => setShowMenu(false)}
       />
 
       {/* Slide Panel Container */}
-      <div
-        className={`fixed top-0 right-0 bottom-0 w-full md:w-[400px] bg-white z-50 flex flex-col overflow-hidden transition-all duration-300 ease-in-out ${showMenu ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'}`}
-      >
-        <div className="flex justify-end flex-col p-5 pb-0">
-          <div className="flex flex-row justify-between">
-            {menuView === 'login' && (
-              <button className="p-0" onClick={() => setMenuView('menu')}>
-                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M26.7508 29.2384L16.8121 19.2997L26.7508 9.36099C27.7497 8.362 27.7497 6.74824 26.7508 5.74925C25.7518 4.75025 24.138 4.75025 23.139 5.74925L11.3816 17.5066C10.3826 18.5056 10.3826 20.1194 11.3816 21.1184L23.139 32.8758C24.138 33.8747 25.7518 33.8747 26.7508 32.8758C27.7241 31.8768 27.7497 30.2374 26.7508 29.2384Z" fill="#333A3F" />
-                </svg>
-              </button>
-            )}
-            <button className="p-0 ml-auto" onClick={() => {
-              setShowMenu(false)
-              setMenuView('menu')
-            }}>
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M30 10L10 30" stroke="#333A3F" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M10 10L30 30" stroke="#333A3F" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
-          </div>
-
-          <div className="flex-1 flex flex-col relative">
-            <div className={`transition-all duration-500 absolute inset-0 ${menuView === 'login' ? 'opacity-100 z-10 transform translate-x-0' : 'opacity-0 z-0 pointer-events-none transform translate-x-full'}`}>
-              <LoginCard className="mx-auto" />
-            </div>
-
-            <nav className={`space-y-2 text-4xl font-bold w-full pl-12 mt-8 transition-all duration-500 absolute inset-0 ${menuView === 'menu' ? 'opacity-100 z-10 transform translate-x-0' : 'opacity-0 z-0 pointer-events-none transform -translate-x-full'}`}>
-
-              <div className="transition-opacity duration-300 delay-[0ms]" style={{opacity: showMenu && menuView === 'menu' ? 1 : 0}}>
-                <button onClick={() => setMenuView('login')} className="block p-0 text-left w-full text-4xl font-bold">Sign-up/Log in</button>
-              </div>
-              <div className="transition-opacity duration-300 delay-[50ms]" style={{opacity: showMenu && menuView === 'menu' ? 1 : 0}}>
-                <a href="#" className="block">Play Games</a>
-              </div>
-              <div className="transition-opacity duration-300 delay-[100ms]" style={{opacity: showMenu && menuView === 'menu' ? 1 : 0}}>
-                <a href="https://aroomy.com" target="_blank" rel="noopener noreferrer" className="block">Aroomy App</a>
-              </div>
-              <div className="transition-opacity duration-300 delay-[150ms]" style={{opacity: showMenu && menuView === 'menu' ? 1 : 0}}>
-                <a href="https://mall.aroomy.com" target="_blank" rel="noopener noreferrer" className="block">Aroomy Mall</a>
-              </div>
-              <div className="transition-opacity duration-300 delay-[200ms]" style={{opacity: showMenu && menuView === 'menu' ? 1 : 0}}>
-                <a href="https://mall.aroomy.com/mochi-sofa" target="_blank" rel="noopener noreferrer" className="block">Mochi Sofa</a>
-              </div>
-              <div className="transition-opacity duration-300 delay-[250ms]" style={{opacity: showMenu && menuView === 'menu' ? 1 : 0}}>
-                <a href="https://aroomy.com/support" target="_blank" rel="noopener noreferrer" className="block">Support</a>
-              </div>
-              <div className="transition-opacity duration-300 delay-[300ms]" style={{opacity: showMenu && menuView === 'menu' ? 1 : 0}}>
-                <button
-                  onClick={() => setShowSocialLinks(!showSocialLinks)}
-                  className="flex text-4xl font-bold pl-0 items-center justify-between w-full"
-                >
-                  <div>Social Media</div>
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    className={`transform transition-transform duration-200 ${showSocialLinks ? 'rotate-180' : ''}`}
-                  >
-                    <path d="M7 10L12 15L17 10" stroke="#333A3F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-                <div className={`pl-28 font-normal space-y-3 mt-3 text-2xl transition-all duration-1000 ${showSocialLinks ? 'max-h-[500px]' : 'max-h-0 overflow-hidden'}`}>
-                  <div className="transition-opacity duration-300 delay-[0ms]" style={{opacity: showMenu && showSocialLinks ? 1 : 0}}>
-                    <a href="https://www.instagram.com/aroomy.home" target="_blank" rel="noopener noreferrer" className="block">Instagram</a>
-                  </div>
-                  <div className="transition-opacity duration-300 delay-[50ms]" style={{opacity: showMenu && showSocialLinks ? 1 : 0}}>
-                    <a href="https://www.tiktok.com/@aroomy1home" target="_blank" rel="noopener noreferrer" className="block">TikTok</a>
-                  </div>
-                  <div className="transition-opacity duration-300 delay-[100ms]" style={{opacity: showMenu && showSocialLinks ? 1 : 0}}>
-                    <a href="https://www.youtube.com/@aroomyhome" target="_blank" rel="noopener noreferrer" className="block">YouTube</a>
-                  </div>
-                  <div className="transition-opacity duration-300 delay-[150ms]" style={{opacity: showMenu && showSocialLinks ? 1 : 0}}>
-                    <a href="https://x.com/AroomyHome" target="_blank" rel="noopener noreferrer" className="block">X</a>
-                  </div>
-                  <div className="transition-opacity duration-300 delay-[200ms]" style={{opacity: showMenu && showSocialLinks ? 1 : 0}}>
-                    <a href="https://www.pinterest.com/Aroomyhome" target="_blank" rel="noopener noreferrer" className="block">Pinterest</a>
-                  </div>
-                  <div className="transition-opacity duration-300 delay-[250ms]" style={{opacity: showMenu && showSocialLinks ? 1 : 0}}>
-                    <a href="https://www.facebook.com/aroomyhome" target="_blank" rel="noopener noreferrer" className="block">Facebook</a>
-                  </div>
-                  <div className="transition-opacity duration-300 delay-[300ms]" style={{opacity: showMenu && showSocialLinks ? 1 : 0}}>
-                    <a href="https://www.linkedin.com/company/aroomy" target="_blank" rel="noopener noreferrer" className="block">LinkedIn</a>
-                  </div>
-                </div>
-              </div>
-            </nav>
-          </div>
-        </div>
-      </div>
+      <SideMenu 
+        isOpen={showMenu}
+        onClose={() => setShowMenu(false)}
+        showSocialLinks={showSocialLinks}
+        toggleSocialLinks={toggleSocialLinks}
+        menuView={menuView}
+        setMenuView={setMenuView}
+      />
     </>
   );
 };
