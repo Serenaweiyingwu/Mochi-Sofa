@@ -341,5 +341,5 @@ export default function Scene({
         };
     }, []);
 
-    return <div ref={containerRef} style={{ width: "100%", height: "880px" }} />;
+    return <div ref={containerRef} style={{ width: "100%", height: "100%" }} />;
 }
