@@ -35,6 +35,11 @@ export default function Scene({
         pointLight.position.set(2, 2, 2);
         scene.add(pointLight);
 
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+        dirLight.position.set(5, 5, 5);
+        scene.add(dirLight);
+        scene.add(new THREE.DirectionalLightHelper(dirLight));
+
         const grid = new THREE.GridHelper(5, 20, 0x888888, 0xcccccc);
         grid.material.opacity = 0.4;
         grid.material.transparent = true;
@@ -109,9 +114,6 @@ export default function Scene({
                 for (const target of obbs) {
                     if (selfMeshes.has(target.target)) continue;
                     if (testOBB.intersectsOBB(target.obb)) {
-                        console.log("collision detected");
-                        console.log(testOBB);
-                        console.log(target.obb);
                         return true;
                     }
                 }
@@ -156,8 +158,6 @@ export default function Scene({
                 if (!checkCollision(obj)) {
                     lastValidPosition.copy(obj.position);
                 } else {
-                    console.log(obj.position);
-                    console.log(lastValidPosition);
                     obj.position.copy(lastValidPosition);
 
                 }
@@ -245,11 +245,13 @@ export default function Scene({
 
                     const helper = new THREE.LineSegments(
                         new THREE.EdgesGeometry(geometry),
-                        new THREE.LineBasicMaterial({ color: 0xff0000 })
+                        new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 1 })
                     );
                     helper.matrixAutoUpdate = false;
                     helper.matrix.copy(mesh.matrixWorld);
+                    helper.visible = true; //bounding box visualization
                     scene.add(helper);
+
 
                     obbs.push({ obb, helper, target: mesh });
                 }
@@ -288,7 +290,7 @@ export default function Scene({
 
             const box = new THREE.Mesh(
                 new THREE.BoxGeometry(0.7, 0.1, 0.5),
-                new THREE.MeshStandardMaterial({ color: 0xb0c4de })
+                new THREE.MeshToonMaterial({ color: 0xb0c4de })
             );
             box.rotation.x = Math.PI / 4;
             box.position.set(0, 0.21, 0.06);
@@ -298,7 +300,7 @@ export default function Scene({
             const length = 0.51;
             const cylinder = new THREE.Mesh(
                 new THREE.CylinderGeometry(radius, radius, length, 32),
-                new THREE.MeshStandardMaterial({ color: 0x8fbc8f })
+                new THREE.MeshToonMaterial({ color: 0xb0c4de })
             );
             cylinder.rotation.z = Math.PI / 2;
             cylinder.position.set(0, radius, 0);
@@ -314,7 +316,7 @@ export default function Scene({
             startPlacingSeat: () => {
                 const mesh = new THREE.Mesh(
                     new THREE.BoxGeometry(0.85, 0.38, 0.85),
-                    new THREE.MeshStandardMaterial({ color: 0xffcc99 })
+                    new THREE.MeshToonMaterial({ color: 0xb0c4de })
                 );
                 mesh.position.y = 0.19;
                 scene.add(mesh);
