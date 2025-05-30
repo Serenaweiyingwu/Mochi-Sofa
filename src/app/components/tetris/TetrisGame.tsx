@@ -36,7 +36,7 @@ const TetrisGame: React.FC = () => {
   };
 
   const handleShareForLives = () => {
-    setLikes((prev) => prev + 3);
+    setLikes((prev) => prev + 2);
     if (gameController) {
       gameController.restart();
     }
@@ -51,7 +51,7 @@ const TetrisGame: React.FC = () => {
   };
 
   return (
-    <div className="max-w-md w-full">
+    <div className="w-full">
       <div className="bg-[#0F2A4A] text-white rounded-lg overflow-hidden shadow-xl">
         {/* Header */}
         <div className="p-4 pb-2">

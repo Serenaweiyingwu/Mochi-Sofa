@@ -7,6 +7,35 @@
   align-items: center;
   border-radius: 0px 6px 6px 6px;
 }
+body {
+  
+  touch-action: manipulation; /* Prevents double-tap zoom */
+}
+
+/* Media queries for different screen heights */
+@media screen and (max-height: 896px) and (min-height: 806px) {
+  .gameContainer {
+    font-size: 14px;
+  }
+}
+
+@media screen and (max-height: 806px) and (min-height: 720px) {
+  .gameContainer {
+    font-size: 12px;
+  }
+}
+
+@media screen and (max-height: 720px) and (min-height: 620px) {
+  .gameContainer {
+    font-size: 10px;
+  }
+}
+
+@media screen and (max-height: 620px) {
+  .gameContainer {
+    font-size: 10px;
+  }
+}
 
 /* Override default tetris block styles */
 :global(.game-block) {
