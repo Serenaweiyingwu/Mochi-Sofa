@@ -119,7 +119,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
                 className="transition-opacity duration-300 delay-[50ms]"
                 style={{ opacity: isOpen && menuView === "menu" ? 1 : 0 }}
               >
-                <a href="#" className="block">
+                <a href="/tetris" className="block">
                   Play Games
                 </a>
               </div>
