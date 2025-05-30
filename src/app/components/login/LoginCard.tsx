@@ -91,7 +91,7 @@ const LoginCard = ({ className }: { className?: string }) => {
           const res = await exchangeGoogleToken({
             exchangeTokenV1Request: {
               code: code || '',
-              redirectUri: `${window.location.origin}/`,
+              redirectUri: `${window.location.origin}/login`,
             },
           });
           handleLoginSuccess(res.user, res.token, router);

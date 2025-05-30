@@ -1,13 +1,33 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import { useInviteMutation } from "@/api/aroomy-api";
 
 interface InviteModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSendInvite: () => void;
+  inviterId?: string;
 }
 
-const InviteModal: React.FC<InviteModalProps> = ({ isOpen, onClose, onSendInvite }) => {
+const InviteModal: React.FC<InviteModalProps> = ({ isOpen, onClose, inviterId }) => {
+  const [inviteCode, setInviteCode] = useState("");
+  const [invite] = useInviteMutation();
+  
+  useEffect(() => {
+    if (isOpen && inviterId) {
+      setInviteCode(inviterId);
+    }
+  }, [isOpen, inviterId]);
+  
+  const getInviteUrl = () => {
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/tetris?invite=${inviteCode}`;
+  };
+  
+  const copyInviteLink = () => {
+    invite({ inviteV1Request: { user_id: inviteCode } })
+    navigator.clipboard.writeText(getInviteUrl())
+  };
+  
   if (!isOpen) return null;
 
   return (
@@ -25,12 +45,12 @@ const InviteModal: React.FC<InviteModalProps> = ({ isOpen, onClose, onSendInvite
         </button>
 
         <h2 className="text-[#1A305B] text-3xl font-bold mb-1 text-center">5% off for both</h2>
-        <p className="text-center font-bold mb-6">
+        <p className="text-center font-bold mb-4">
           Invite a friend and get<br />
           5% off for both of you
         </p>
 
-        <div className="mb-6">
+        <div className="mb-4">
           <Image
             src="/images/furniture/coupon5.png"
             alt="5% discount"
@@ -39,14 +59,13 @@ const InviteModal: React.FC<InviteModalProps> = ({ isOpen, onClose, onSendInvite
             className="w-[168px] h-[100px] object-contain"
           />
         </div>
-
-        <p className="text-center text-sm mb-6">
-          *This coupon will send to you<br />
-          when your friend finish purchase
+        <p className="text-center text-sm mb-4">
+        *This coupon will send to you<br />
+        when your friend play this game
         </p>
 
         <button
-          onClick={onSendInvite}
+          onClick={copyInviteLink}
           className="bg-[#5CB2D1] text-white font-bold py-3 px-6 rounded-md flex items-center gap-1 justify-center w-full"
         >
           <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg">

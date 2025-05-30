@@ -3,6 +3,7 @@ import Image from "next/image";
 interface GameOverModalProps {
   isOpen: boolean;
   points: number;
+  onClose: () => void;
   onTryAgain: () => void;
   onTakeOffer: () => void;
   onGetDirectDiscount: () => void;
@@ -13,6 +14,7 @@ interface GameOverModalProps {
 const GameOverModal: React.FC<GameOverModalProps> = ({
   isOpen,
   points,
+  onClose,
   onTryAgain,
   onTakeOffer,
   onGetDirectDiscount,
@@ -50,8 +52,8 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
 
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 transition-all duration-300">
-      {/* Modal Background Overlay */}
       <div
+        onClick={() => {onClose();handleTryAgain();}}
         className="fixed inset-0 bg-[#1A305B99] transition-opacity duration-300"
       />
 
@@ -123,9 +125,6 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
         </div>}
 
         <div className="relative z-10">
-          {/* Score display at top similar to game UI */}
-
-
           <h2 className="text-3xl font-extrabold text-[#1e3a57] mb-4 text-center">Game over</h2>
 
           {calculateDiscount(points) > 0 ? (

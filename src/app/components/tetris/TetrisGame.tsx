@@ -5,19 +5,76 @@ import Tetris from "react-tetris";
 import GameOverModal from "./GameOverModal";
 import RulesModal from "./RulesModal";
 import InviteModal from "./InviteModal";
+import CouponModal from "./CouponModal";
 import { useRouter } from "next/navigation";
 import styles from "./TetrisGame.module.css";
 import Image from "next/image";
-const TetrisGame: React.FC = () => {
+import { useCompleteGameMutation, useGetInviteQuery, useGetCouponMutation } from "@/api/aroomy-api";
+import { message } from "antd";
+
+interface TetrisGameProps {
+  inviteCode?: string | null;
+}
+
+const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
   const [likes, setLikes] = useState(0);
-  const [isLiked, setIsLiked] = useState(false);
   const [score, setScore] = useState(0);
   const [gameController, setGameController] = useState<any>(null);
   const [showRules, setShowRules] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showCouponModal, setShowCouponModal] = useState(false);
   const router = useRouter();
+  const [getInvite] = useGetInviteQuery(inviteCode || '');
   const scoreRef = useRef<HTMLSpanElement>(null);
-
+  const [isOpen, setIsOpen] = useState(false);
+  const [userId, setUserId] = useState<string>("");
+  const [invitationSuccess, setInvitationSuccess] = useState(false);
+  const [completeGame] = useCompleteGameMutation();
+  const [getCoupon] = useGetCouponMutation(userId);
+  const [couponCode, setCouponCode] = useState<string>("");
+  useEffect(() => {
+    const userInfo = localStorage.getItem('user_info');
+    
+    if (userInfo) {
+      const user = JSON.parse(userInfo);
+      setUserId(user.id);
+    } 
+  }, []);
+  
+  const isUserLoggedIn = () => {
+    return userId !== "" && userId !== undefined;
+  };
+  
+  useEffect(() => {
+    if (inviteCode && userId && isUserLoggedIn()) {
+      const processedInvites = JSON.parse(localStorage.getItem('processedInvites') || '[]');
+      
+      if (inviteCode === userId) {
+        return;
+      }
+      
+      if (!processedInvites.includes(inviteCode)) {
+        processedInvites.push(inviteCode);
+        localStorage.setItem('processedInvites', JSON.stringify(processedInvites));
+        
+        completeInvitation();
+      }
+    }
+  }, [inviteCode, userId]);
+  
+  const completeInvitation = async () => {
+    if (!isUserLoggedIn()) {
+      return;
+    }
+    
+    try {
+      await getInvite();
+      setInvitationSuccess(true);
+      setTimeout(() => setInvitationSuccess(false), 3000);
+    } catch (error) {
+    }
+  };
+  
   useEffect(() => {
     if (scoreRef.current) {
       scoreRef.current.textContent = String(score);
@@ -28,12 +85,31 @@ const TetrisGame: React.FC = () => {
     router.push("/");
   };
 
+  const handleCompleteGame = () => {
+    if (!inviteCode) {
+      return;
+    }
+    try {
+      completeGame({invitation_id: inviteCode || '', score})
+    } catch (error) {
+      message.error('Error completing game');
+    }
+  }
+
   const handleTryAgain = (controller: any) => {
     if (likes > 0) {
       setLikes((prev) => prev - 1);
       controller.restart();
     }
   };
+
+  const handleGetCoupon = async () => {
+    const res = await getCoupon();
+    setShowCouponModal(true);
+    if (res.coupons.length > 0) {
+      setCouponCode(res.coupons[0].discount_code);
+    }
+  }
 
   const handleShareForLives = () => {
     setLikes((prev) => prev + 2);
@@ -47,13 +123,15 @@ const TetrisGame: React.FC = () => {
   };
   
   const handleSendInvite = () => {
+    const sentInvites = JSON.parse(localStorage.getItem('sentInvites') || '[]');
+    sentInvites.push(new Date().toISOString());
+    localStorage.setItem('sentInvites', JSON.stringify(sentInvites));
     setShowInviteModal(false);
   };
 
   return (
     <div className="w-full">
       <div className="bg-[#0F2A4A] text-white rounded-lg overflow-hidden shadow-xl">
-        {/* Header */}
         <div className="p-4 pb-2">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -94,31 +172,39 @@ const TetrisGame: React.FC = () => {
                   </svg>
                 </button>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between relative flex-col">
                 <p className="text-xl font-normal w-4/5">
                   Win up to 30% off on your Mochi Sofa by playing this game with
                   friends!
                 </p>
-                <button 
-                  className="flex flex-col justify-end"
-                  onClick={() => setShowRules(true)}
-                >
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
+                <div className="flex justify-end absolute bottom-0 right-0 gap-2">
+                  <button
+                    className="bg-[#5CB2D1] h-6 flex justify-center items-center text-white px-3 py-1 rounded-md hover:bg-[#4a9ab8] transition-colors"
+                    onClick={handleGetCoupon}
                   >
-                    <path
-                      d="M9.87891 7.51884C11.0505 6.49372 12.95 6.49372 14.1215 7.51884C15.2931 8.54397 15.2931 10.206 14.1215 11.2312C13.9176 11.4096 13.6917 11.5569 13.4513 11.6733C12.7056 12.0341 12.0002 12.6716 12.0002 13.5V14.25M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12ZM12 17.25H12.0075V17.2575H12V17.25Z"
-                      stroke="#E6E6E6"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
+                    Coupon
+                  </button>
+                  <button 
+                    className="flex flex-col justify-end"
+                    onClick={() => setShowRules(true)}
+                  >
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M9.87891 7.51884C11.0505 6.49372 12.95 6.49372 14.1215 7.51884C15.2931 8.54397 15.2931 10.206 14.1215 11.2312C13.9176 11.4096 13.6917 11.5569 13.4513 11.6733C12.7056 12.0341 12.0002 12.6716 12.0002 13.5V14.25M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12ZM12 17.25H12.0075V17.2575H12V17.25Z"
+                        stroke="#E6E6E6"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -126,7 +212,6 @@ const TetrisGame: React.FC = () => {
 
         {/* Game Area */}
         <div className="px-4">
-          {/* Tetris Game Board */}
           <div
             className="rounded-lg p-0 mb-4 overflow-hidden relative"
             style={{ height: "calc(70vh - 40px)", maxHeight: "600px" }}
@@ -138,12 +223,12 @@ const TetrisGame: React.FC = () => {
                   width="24"
                   height="24"
                   viewBox="0 0 24 24"
-                  fill={isLiked ? "#5CB2D1" : "none"}
+                  fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                 >
                   <path
                     d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                    stroke={isLiked ? "#5CB2D1" : "white"}
+                    stroke="white"
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -174,7 +259,12 @@ const TetrisGame: React.FC = () => {
               {({ Gameboard, points, state, controller }) => {
                 React.useEffect(() => {
                   setScore(points);
-                }, [points]);
+                  console.log('test')
+                  if (state === "LOST") {
+                    handleCompleteGame()
+                  }
+                  setIsOpen(state === "LOST")
+                }, [points, state]);
 
                 React.useEffect(() => {
                   if (controller && controller !== gameController) {
@@ -190,17 +280,23 @@ const TetrisGame: React.FC = () => {
                       <Gameboard />
 
                       <GameOverModal
-                        isOpen={state === "LOST"}
+                        isOpen={isOpen}
+                        onClose={() => {
+                          console.log("closing game over modal");
+                          setIsOpen(false)
+                        }}
                         points={points}
                         onTryAgain={() => handleTryAgain(controller)}
                         onTakeOffer={() => alert("Take Offer")}
-                        onGetDirectDiscount={() => alert("Get Direct Discount")}
+                        onGetDirectDiscount={() => {
+                          setIsOpen(false);
+                          setShowInviteModal(true);
+                        }}
                         hasLives={likes > 0}
                         onShareForLives={handleShareForLives}
                       />
                     </div>
 
-                    {/* Game Controls */}
                     <div className="flex justify-between mb-4 mt-2.5">
                       <button
                         className="bg-[#5CB2D1] p-3 w-11 h-11 flex justify-center items-center rounded-md"
@@ -321,7 +417,6 @@ const TetrisGame: React.FC = () => {
             </Tetris>
           </div>
 
-          {/* Invite Button */}
           <button
             onClick={handleInviteFriend}
             className="w-full bg-[#5CB2D1] text-white py-3 px-4 rounded-md flex items-center justify-center mb-4"
@@ -366,8 +461,34 @@ const TetrisGame: React.FC = () => {
       <InviteModal 
         isOpen={showInviteModal} 
         onClose={() => setShowInviteModal(false)} 
-        onSendInvite={handleSendInvite} 
+        inviterId={userId}
       />
+      
+      <CouponModal
+        couponCode={couponCode}
+        handleSendInvite={handleSendInvite}
+        isOpen={showCouponModal}
+        onClose={() => setShowCouponModal(false)}
+      />
+      
+      {invitationSuccess && (
+        <div className="fixed bottom-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-lg z-50 animate-fade-in-up">
+          <div className="flex items-center">
+            <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <p>Invitation successful! You and your friend will both receive 5% off.</p>
+            <button 
+              onClick={() => setInvitationSuccess(false)} 
+              className="ml-4 text-white hover:text-gray-200"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
