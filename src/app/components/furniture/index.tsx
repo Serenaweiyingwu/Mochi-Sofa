@@ -6,11 +6,12 @@ import SideMenu from "./SideMenu";
 
 const FurnitureCustomize = () => {
   const [sceneAPI, setSceneAPI] = useState<{
-    startPlacingSeat?: () => void;
-    startPlacingBackrest?: () => void;
+    startPlacingSeat?: (selectedColorName: string) => void;
+    startPlacingBackrest?: (selectedColorName: string) => void;
   }>({});
   const [selectedCategory] = useState("sofa");
   const [selectedColor, setSelectedColor] = useState("#FFD763");
+  const [selectedColorName, setSelectedColorName] = useState("Orange");
   const [showBanner, setShowBanner] = useState(true);
   const [showMenu, setShowMenu] = useState(false);
   const [showSocialLinks, setShowSocialLinks] = useState(false);
@@ -25,16 +26,33 @@ const FurnitureCustomize = () => {
   ];
 
   const colors = [
-    { id: "yellow", value: "#FFD763" },
-    { id: "cream", value: "#F5EFE0" },
-    { id: "lightBlue", value: "#5FB4D0" },
-    { id: "darkBlue", value: "#0C2B4B" },
-    { id: "skyBlue", value: "#CBE9F6" },
-    // Add more color options as needed
+    { id: "Grayish Brown", value: "#72675b" },
+    { id: "Dark Gray", value: "#4a4a4a" },
+    { id: "Dark Brown", value: "#3d2b1f" },
+    { id: "Deep Red", value: "#8b0000" },
+    { id: "Red", value: "#ff0000" },
+    { id: "Orange", value: "#ffa500" },
+    { id: "Mustard Yellow", value: "#ffdb58" },
+    { id: "Pale Aqua", value: "#bcd4e6" },
+    { id: "Light Grayish Green", value: "#c8d6c6" },
+    { id: "Olive Green", value: "#708238" },
+    { id: "Deep Cyan Green", value: "#008b8b" },
+    { id: "Deep Cyan Blue", value: "#0e4d92" },
+    { id: "Sky Blue", value: "#87ceeb" },
+    { id: "Dusty Blue", value: "#5a7684" },
+    { id: "Light Blue", value: "#add8e6" },
+    { id: "Light Pink", value: "#ffb6c1" },
+    { id: "Dirty Pink", value: "#c08081" },
+    { id: "Light Gray", value: "#d3d3d3" },
+    { id: "Charcoal Gray", value: "#36454f" },
+    { id: "Light Grey Blue", value: "#a3b6c4" },
+    { id: "Mist Blue", value: "#646d8c" },
+    { id: "Deep Navy Blue", value: "#000080" }
   ];
 
-  const handleColorSelect = (colorValue: string) => {
+  const handleColorSelect = (colorValue: string, colorName: string) => {
     setSelectedColor(colorValue);
+    setSelectedColorName(colorName);
   };
 
   const handleComplete = () => {
@@ -196,9 +214,11 @@ const FurnitureCustomize = () => {
               <div key={category.id} className="flex flex-col items-center">
                 <button
                   onClick={() => {
-                    category.id === "sofa"
-                      ? sceneAPI.startPlacingSeat?.()
-                      : sceneAPI.startPlacingBackrest?.();
+                    if (category.id === "sofa") {
+                      sceneAPI?.startPlacingSeat?.(selectedColorName);
+                    } else {
+                      sceneAPI?.startPlacingBackrest?.(selectedColorName);
+                    }
                   }}
                   key={category.id}
                   className={`relative flex p-0 w-24 h-20 flex-col items-center justify-center rounded-[20px] border-2 overflow-hidden border-[#5CB2D180]`}
@@ -225,7 +245,7 @@ const FurnitureCustomize = () => {
                       selectedColor === color.value ? "border-4" : "border-1"
                     }`}
                     style={{ backgroundColor: color.value }}
-                    onClick={() => handleColorSelect(color.value)}
+                    onClick={() => handleColorSelect(color.value, color.id)}
                     aria-label={`Select ${color.id} color`}
                   >
                     {index < 5 && (

@@ -2,148 +2,65 @@
 
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { TransformControls } from "three/examples/jsm/controls/TransformControls";
 import { Group } from "three";
 import { OBB } from "three/examples/jsm/math/OBB.js";
+import initialize from "@/app/components/Initialization";
+import ControlSetup from "@/app/components/ControlSetup";
+import {checkCollision, updateOBBs} from "@/app/components/Collision";
+import {createBackrest, loadGLB} from "@/app/components/CreateObjects";
 
-export default function Scene({
-                                  onSceneReady,
-                              }: {
+type SceneProps = {
     onSceneReady?: (api: {
-        startPlacingBackrest: () => void;
-        startPlacingSeat: () => void;
+        startPlacingBackrest: (selectedColor: string) => void;
+        startPlacingSeat: (selectedColor: string) => void;
     }) => void;
-}) {
+};
+
+export default function Scene({ onSceneReady}: SceneProps){
     const containerRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const container = containerRef.current;
         if (!container) return;
 
-        const scene = new THREE.Scene();
+        let scene = new THREE.Scene();
+        // camera setting
         const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
         camera.position.set(1, 1, 2);
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
+
+
+        const renderer = new THREE.WebGLRenderer({
+            antialias: true,
+            alpha: true,
+            preserveDrawingBuffer: false,
+            powerPreference: "high-performance"
+        });
         renderer.setSize(container.clientWidth, container.clientHeight);
         renderer.setClearColor("#fdf8f4");
+
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 0.7;
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+        // Additional renderer settings to prevent wireframe artifacts
+        renderer.sortObjects = true;
+        renderer.autoClear = true;
+        renderer.autoClearColor = true;
+        renderer.autoClearDepth = true;
+        renderer.autoClearStencil = true;
+
         container.appendChild(renderer.domElement);
-
-        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-        const pointLight = new THREE.PointLight(0xffffff, 1);
-        pointLight.position.set(2, 2, 2);
-        scene.add(pointLight);
-
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
-        dirLight.position.set(5, 5, 5);
-        scene.add(dirLight);
-        scene.add(new THREE.DirectionalLightHelper(dirLight));
-
-        const grid = new THREE.GridHelper(5, 20, 0x888888, 0xcccccc);
-        grid.material.opacity = 0.4;
-        grid.material.transparent = true;
-        scene.add(grid);
-
-        const controls = new OrbitControls(camera, renderer.domElement);
-        controls.target.set(0, 0, 0);
-        controls.enablePan = false;
-        controls.mouseButtons = {
-            LEFT: null as any,
-            MIDDLE: THREE.MOUSE.DOLLY,
-            RIGHT: THREE.MOUSE.ROTATE,
-        };
-        controls.update();
-
-        const translateControls = new TransformControls(camera, renderer.domElement);
-        translateControls.setMode("translate");
-        translateControls.setTranslationSnap(0.001);
-        translateControls.space = "world";
-        scene.add(translateControls.getHelper());
-
-        const rotateControls = new TransformControls(camera, renderer.domElement);
-        rotateControls.setMode("rotate");
-        rotateControls.setRotationSnap(THREE.MathUtils.degToRad(15));
-        rotateControls.showX = false;
-        rotateControls.showY = true;
-        rotateControls.showZ = false;
-        rotateControls.space = "local";
-        scene.add(rotateControls.getHelper());
-
-        translateControls.addEventListener("dragging-changed", (e) => {
-            controls.enabled = !e.value;
-            rotateControls.enabled = !e.value;
-        });
-        rotateControls.addEventListener("dragging-changed", (e) => {
-            controls.enabled = !e.value;
-            translateControls.enabled = !e.value;
-        });
+        scene = initialize(scene, renderer);
+        const {controls, translateControls, rotateControls} = ControlSetup(camera, renderer, scene);
 
         const selectableObjects: THREE.Object3D[] = [];
         const obbs: { obb: OBB; helper: THREE.LineSegments; target: THREE.Object3D }[] = [];
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
-
-        const checkCollision = (moving: THREE.Object3D): boolean => {
-            const obbsToCheck: OBB[] = [];
-            const selfMeshes = new Set<THREE.Object3D>();
-
-            moving.traverse((child) => {
-                if ((child as any).geometry) {
-                    const mesh = child as THREE.Mesh;
-                    const geometry = mesh.geometry;
-                    if (!geometry.boundingBox) geometry.computeBoundingBox();
-                    if (!geometry.boundingBox) return;
-
-                    const halfSize = new THREE.Vector3();
-                    geometry.boundingBox.getSize(halfSize).multiplyScalar(0.5);
-
-                    const obb = new OBB();
-                    obb.center.set(0, 0, 0);
-                    obb.halfSize.copy(halfSize);
-                    obb.rotation.identity();
-                    mesh.updateMatrixWorld(true);
-                    obb.applyMatrix4(mesh.matrixWorld);
-                    obbsToCheck.push(obb);
-
-                    selfMeshes.add(mesh);
-                }
-            });
-
-            for (const testOBB of obbsToCheck) {
-                for (const target of obbs) {
-                    if (selfMeshes.has(target.target)) continue;
-                    if (testOBB.intersectsOBB(target.obb)) {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        };
-
-        const updateOBBs = () => {
-            for (const entry of obbs) {
-                const object = entry.target;
-                const geometry = (object as any).geometry;
-                if (!geometry || !geometry.boundingBox) geometry?.computeBoundingBox();
-                if (!geometry?.boundingBox) continue;
-
-                const halfSize = new THREE.Vector3();
-                geometry.boundingBox.getSize(halfSize).multiplyScalar(0.5);
-
-                const obb = new OBB();
-                obb.center.set(0, 0, 0);
-                obb.halfSize.copy(halfSize);
-                obb.rotation.identity();
-                object.updateMatrixWorld(true);
-                obb.applyMatrix4(object.matrixWorld);
-
-                entry.obb.copy(obb);
-                entry.helper.matrix.copy(object.matrixWorld);
-                entry.helper.matrixAutoUpdate = false;
-            }
-        };
 
         let lastValidPosition = new THREE.Vector3();
         let lastValidRotation = new THREE.Euler();
@@ -155,7 +72,7 @@ export default function Scene({
         translateControls.addEventListener("objectChange", () => {
             const obj = translateControls.object;
             if (obj) {
-                if (!checkCollision(obj)) {
+                if (!checkCollision(obj, obbs)) {
                     lastValidPosition.copy(obj.position);
                 } else {
                     obj.position.copy(lastValidPosition);
@@ -163,7 +80,7 @@ export default function Scene({
                 }
                 obj.updateMatrixWorld(true);
             }
-            updateOBBs();
+            updateOBBs(obbs);
         });
 
         rotateControls.addEventListener("mouseDown", () => {
@@ -173,14 +90,14 @@ export default function Scene({
         rotateControls.addEventListener("objectChange", () => {
             const obj = rotateControls.object;
             if (obj) {
-                if (!checkCollision(obj)) {
+                if (!checkCollision(obj, obbs)) {
                     lastValidRotation.copy(obj.rotation);
                 } else {
                     obj.rotation.copy(lastValidRotation);
                 }
                 obj.updateMatrixWorld(true);
             }
-            updateOBBs();
+            updateOBBs(obbs);
         });
 
         const animate = () => {
@@ -219,7 +136,7 @@ export default function Scene({
 
         const onClick = () => {
             if (!isPlacing || !placingBox) return;
-            if (checkCollision(placingBox)) {
+            if (checkCollision(placingBox, obbs)) {
                 scene.remove(placingBox);
                 placingBox = null;
                 isPlacing = false;
@@ -285,47 +202,26 @@ export default function Scene({
         renderer.domElement.addEventListener("click", onClick);
         renderer.domElement.addEventListener("pointerdown", onPointerDown);
 
-        function createBackrest(): { object: THREE.Group; yOffset: number } {
-            const group = new THREE.Group();
-
-            const box = new THREE.Mesh(
-                new THREE.BoxGeometry(0.7, 0.1, 0.5),
-                new THREE.MeshToonMaterial({ color: 0xb0c4de })
-            );
-            box.rotation.x = Math.PI / 4;
-            box.position.set(0, 0.21, 0.06);
-            group.add(box);
-
-            const radius = 0.085;
-            const length = 0.51;
-            const cylinder = new THREE.Mesh(
-                new THREE.CylinderGeometry(radius, radius, length, 32),
-                new THREE.MeshToonMaterial({ color: 0xb0c4de })
-            );
-            cylinder.rotation.z = Math.PI / 2;
-            cylinder.position.set(0, radius, 0);
-            group.add(cylinder);
-
-            return {
-                object: group,
-                yOffset: 0.38,
-            };
-        }
 
         onSceneReady?.({
-            startPlacingSeat: () => {
-                const mesh = new THREE.Mesh(
-                    new THREE.BoxGeometry(0.85, 0.38, 0.85),
-                    new THREE.MeshToonMaterial({ color: 0xb0c4de })
+            startPlacingSeat: async (selectedColor) => {
+                const selectedColorName = selectedColor.replace(/\s+/g, "_");
+                console.log(`/textures/Cushion/${selectedColorName}`);
+                const seat = await loadGLB(
+                    "/models/meshes/Cushion.glb",
+                    `/textures/Cushion/${selectedColorName}`,   // basePath
+                    "Cushion"                      // texturePrefix
                 );
-                mesh.position.y = 0.19;
-                scene.add(mesh);
-                placingBox = mesh;
-                placingYOffset = 0.19;
+
+                seat.position.y = 0.35;
+                scene.add(seat);
+                placingBox = seat;
+                placingYOffset = 0.35;
                 isPlacing = true;
             },
-            startPlacingBackrest: () => {
-                const { object, yOffset } = createBackrest();
+            startPlacingBackrest: async (selectedColor) => {
+                const selectedColorName = selectedColor.replace(/\s+/g, "_");
+                const {object, yOffset} = await createBackrest(selectedColorName);
                 object.position.y = yOffset;
                 scene.add(object);
                 placingBox = object;
