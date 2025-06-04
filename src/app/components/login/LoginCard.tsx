@@ -1,7 +1,7 @@
 "use client";
 
 import { LeftOutlined } from "@ant-design/icons";
-import { Button, Card, ConfigProvider, Divider, Input, message, Tabs, TabsProps } from "antd";
+import { Button, Card, ConfigProvider, Divider, Input, Tabs, TabsProps } from "antd";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ContinueButton from "./continueButton";
@@ -96,7 +96,6 @@ const LoginCard = ({ className }: { className?: string }) => {
           window.location.href = '/';
         } catch (error) {
           console.error("Error exchanging Google token:", error);
-          message.error("Something went wrong, please try again");
           router.replace('/');
         }
       }
@@ -121,7 +120,6 @@ const LoginCard = ({ className }: { className?: string }) => {
       }
     } catch (error) {
       console.error("Failed to get Google auth URL:", error);
-      message.error("Failed to get Google auth URL");
     }
   }, [getGoogleAuthUrl]);
 
@@ -169,11 +167,9 @@ const LoginCard = ({ className }: { className?: string }) => {
           } catch (error) {
             console.error("Login failed:", error);
             setLoginMethod('code');
-            message.error("Login failed, try using verification code");
           }
         }
       } catch (error) {
-        message.error("Login failed, please try again");
         console.log('error', error);
       } finally {
         setSubmitEmailLoading(false);
@@ -219,11 +215,9 @@ const LoginCard = ({ className }: { className?: string }) => {
             handleLoginSuccess(user, token, router);
             setTimeout(() => window.location.reload(), 100);
           } else {
-            message.error("Invalid code");
           }
         } catch (err) {
           console.error("Error verifying OTP:", err);
-          message.error("Something went wrong, please try again");
           router.replace("/login");
         } finally {
           setEmailCodeLoading(false);
@@ -249,7 +243,6 @@ const LoginCard = ({ className }: { className?: string }) => {
           handleLoginSuccess(user, token, router);
           setTimeout(() => window.location.reload(), 100);
         } else {
-          message.error("Invalid code");
         }
       } catch (err: unknown) {
         console.error("Error verifying OTP:", err);

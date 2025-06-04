@@ -7,7 +7,6 @@ import GameOverModal from "./GameOverModal";
 import RulesModal from "./RulesModal";
 import InviteModal from "./InviteModal";
 import CouponModal from "./CouponModal";
-import styles from "./TetrisGame.module.css";
 import Image from "next/image";
 import { useCompleteGameMutation, useGetInviteQuery, useGetCouponMutation } from "@/api/aroomy-api";
 import { message } from "antd";
@@ -288,7 +287,7 @@ const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
                 return (
                   <>
                     <div
-                      className={`${styles.gameContainer} border-4 border-[#CBF1FF]`}
+                      className={`gameContainer border-4 border-[#CBF1FF]`}
                     >
                       <Gameboard />
 

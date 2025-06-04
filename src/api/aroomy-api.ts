@@ -2,21 +2,26 @@ export const API_BASE_URL = 'https://api-dev.aroomy.com/';
 export const GAME_API_BASE_URL = 'http://localhost:8001';
 
 const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || 'error');
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'error');
+    }
+  
+    return response.json();
+  } catch (error) {
+    console.error('API request error:', error);
+    return {}
   }
 
-  return response.json();
 };
 
 const authenticatedRequest = async (endpoint: string, options: RequestInit = {}) => {

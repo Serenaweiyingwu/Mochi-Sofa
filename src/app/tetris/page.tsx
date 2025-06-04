@@ -60,7 +60,7 @@ export default function TetrisPage() {
         
         <div className="flex max-w-4xl w-full">
           {isLoggedIn ? (
-               <TetrisGame inviteCode={inviteCode} />
+            <TetrisGame inviteCode={inviteCode} />
           ) : (
             <div className="w-full bg-white rounded-lg p-8 text-center shadow-lg">
               <h2 className="text-2xl font-bold text-gray-800 mb-4">Login Required</h2>
