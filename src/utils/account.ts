@@ -10,7 +10,7 @@ export const getCachedUserInfoToken = (): string | null => {
   }
 };
 
-export const cacheUserInfo = (userInfo: any): void => {
+export const cacheUserInfo = (userInfo: object): void => {
   try {
     if (typeof window === 'undefined') return;
     localStorage.setItem("user_info", JSON.stringify(userInfo));
@@ -38,7 +38,7 @@ export const removeUserInfo = (): void => {
   }
 };
 
-export const getCachedUserInfo = (): any => {
+export const getCachedUserInfo = (): object | null => {
   try {
     if (typeof window === 'undefined') return null;
     const userInfo = localStorage.getItem("user_info");

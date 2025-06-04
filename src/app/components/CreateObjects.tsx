@@ -1,5 +1,8 @@
 import * as THREE from "three";
+import { GLTF } from "three/examples/jsm/Addons.js";
+// @ts-expect-error: OrbitControls does not have proper TypeScript definitions
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+// @ts-expect-error: OrbitControls does not have proper TypeScript definitions
 import {mergeVertices} from "three/examples/jsm/utils/BufferGeometryUtils";
 export async function createBackrest(color: string): Promise<{ object: THREE.Group; yOffset: number}> {
     const group = new THREE.Group();
@@ -37,65 +40,65 @@ export async function loadGLB(
     return new Promise((resolve, reject) => {
         loader.load(
             glbPath,
-            (gltf) => {
-                const model = gltf.scene;
+            (gltf: GLTF) => {
+          const model: THREE.Group = gltf.scene;
 
-                // Apply material and geometry smoothing
-                model.traverse((child) => {
-                    if ((child as THREE.Mesh).isMesh) {
-                        const mesh = child as THREE.Mesh;
+          // Apply material and geometry smoothing
+          model.traverse((child: THREE.Object3D) => {
+              if ((child as THREE.Mesh).isMesh) {
+            const mesh = child as THREE.Mesh;
 
-                        // Apply material
-                        if (mesh.material && (mesh.material as any).dispose) {
-                            (mesh.material as any).dispose();
-                        }
-                        mesh.material = material;
-                        mesh.material.needsUpdate = true;
+            // Apply material
+            if (mesh.material && (mesh.material as THREE.Material).dispose) {
+                (mesh.material as THREE.Material).dispose();
+            }
+            mesh.material = material;
+            mesh.material.needsUpdate = true;
 
-                        // Enable shadows
-                        mesh.castShadow = true;
-                        mesh.receiveShadow = true;
+            // Enable shadows
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
 
-                        // Geometry smoothing
-                        const geometry = mesh.geometry;
-                        if (geometry) {
-                            geometry.computeVertexNormals();
+            // Geometry smoothing
+            const geometry: THREE.BufferGeometry | undefined = mesh.geometry;
+            if (geometry) {
+                geometry.computeVertexNormals();
 
-                            if (geometry.attributes.uv) {
-                                geometry.computeTangents?.();
-                            }
-
-                            if (!geometry.index && mergeVertices) {
-                                const indexed = mergeVertices(geometry);
-                                if (indexed !== geometry) {
-                                    geometry.dispose();
-                                    mesh.geometry = indexed;
-                                    indexed.computeVertexNormals();
-                                }
-                            }
-                        }
-                    }
-                });
-
-                // Center model
-                const box = new THREE.Box3().setFromObject(model);
-                const center = box.getCenter(new THREE.Vector3());
-                const size = box.getSize(new THREE.Vector3());
-                model.position.sub(center);
-
-                // Scale to fit in view if too large
-                const maxDim = Math.max(size.x, size.y, size.z);
-                if (maxDim > 5) {
-                    const scale = 5 / maxDim;
-                    model.scale.setScalar(scale);
+                if (geometry.attributes.uv) {
+              geometry.computeTangents?.();
                 }
 
-                resolve(model);
+                if (!geometry.index && mergeVertices) {
+              const indexed: THREE.BufferGeometry = mergeVertices(geometry);
+              if (indexed !== geometry) {
+                  geometry.dispose();
+                  mesh.geometry = indexed;
+                  indexed.computeVertexNormals();
+              }
+                }
+            }
+              }
+          });
+
+          // Center model
+          const box: THREE.Box3 = new THREE.Box3().setFromObject(model);
+          const center: THREE.Vector3 = box.getCenter(new THREE.Vector3());
+          const size: THREE.Vector3 = box.getSize(new THREE.Vector3());
+          model.position.sub(center);
+
+          // Scale to fit in view if too large
+          const maxDim: number = Math.max(size.x, size.y, size.z);
+          if (maxDim > 5) {
+              const scale: number = 5 / maxDim;
+              model.scale.setScalar(scale);
+          }
+
+          resolve(model);
             },
             undefined,
-            (error) => {
-                console.error("Error loading GLB model:", error);
-                reject(error);
+            (error: ErrorEvent) => {
+          console.error("Error loading GLB model:", error);
+          reject(error);
             }
         );
     });
