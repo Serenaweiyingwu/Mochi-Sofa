@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'mochi-sofa-dev',
-      cwd: '/home/ubuntu/develop-mochi-sofa',
+      cwd: '/home/ubuntu/dev-mochi-sofa',
       script: 'node_modules/next/dist/bin/next',
       args: 'start',
       env: {
