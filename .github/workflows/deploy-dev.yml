@@ -1,0 +1,53 @@
+name: Deploy to EC2 (Dev)
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20.x'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies & build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Create logs directory
+        run: mkdir -p logs
+
+      - name: Upload to EC2
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: ".next,public,package.json,package-lock.json,ecosystem.config.js"
+          target: "~/dev-mochi-sofa"
+          strip_components: 0
+
+      - name: SSH into EC2 & restart PM2
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd ~/dev-mochi-sofa
+            npm ci --omit=dev
+            pm2 reload ecosystem.config.js --only mochi-sofa-dev || pm2 start ecosystem.config.js --only mochi-sofa-dev 
