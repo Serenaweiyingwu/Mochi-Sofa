@@ -1,7 +1,9 @@
 import { cacheUserInfo, cacheUserInfoToken, getCachedUserInfoToken } from './account';
 import { API_BASE_URL } from '../api/aroomy-api';
 
-export const handleLoginSuccess = (user: any, token: string, router: any): void => {
+import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+
+export const handleLoginSuccess = (user: object, token: string, router: AppRouterInstance): void => {
   try {
     cacheUserInfo(user);
     cacheUserInfoToken(token);
@@ -17,6 +19,7 @@ export const handleLoginSuccess = (user: any, token: string, router: any): void 
 export const getTokenFromCookie = (): string | null => {
   try {
     if (typeof window === 'undefined') return null;
+    
     const cookies = document.cookie.split(';');
     for (let i = 0; i < cookies.length; i++) {
       const cookie = cookies[i].trim();
@@ -79,7 +82,7 @@ export const refreshToken = async (): Promise<boolean> => {
   }
 };
 
-export const logout = (router: any): void => {
+export const logout = (router: AppRouterInstance): void => {
   try {
     const token = getCachedUserInfoToken();
     

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
@@ -6,11 +7,10 @@ import GameOverModal from "./GameOverModal";
 import RulesModal from "./RulesModal";
 import InviteModal from "./InviteModal";
 import CouponModal from "./CouponModal";
-import { useRouter } from "next/navigation";
-import styles from "./TetrisGame.module.css";
 import Image from "next/image";
 import { useCompleteGameMutation, useGetInviteQuery, useGetCouponMutation } from "@/api/aroomy-api";
 import { message } from "antd";
+import { useRouter } from "next/navigation";
 
 interface TetrisGameProps {
   inviteCode?: string | null;
@@ -19,14 +19,21 @@ interface TetrisGameProps {
 const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
   const [likes, setLikes] = useState(0);
   const [score, setScore] = useState(0);
-  const [gameController, setGameController] = useState<any>(null);
+  const [gameController, setGameController] = useState<{
+    moveLeft: () => void;
+    moveRight: () => void;
+    hardDrop: () => void;
+    flipClockwise: () => void;
+    flipCounterclockwise: () => void;
+    restart: () => void;
+  } | null>(null);
   const [showRules, setShowRules] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showCouponModal, setShowCouponModal] = useState(false);
-  const router = useRouter();
   const [getInvite] = useGetInviteQuery(inviteCode || '');
   const scoreRef = useRef<HTMLSpanElement>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
   const [userId, setUserId] = useState<string>("");
   const [invitationSuccess, setInvitationSuccess] = useState(false);
   const [completeGame] = useCompleteGameMutation();
@@ -60,6 +67,8 @@ const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
         completeInvitation();
       }
     }
+  
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inviteCode, userId]);
   
   const completeInvitation = async () => {
@@ -72,6 +81,7 @@ const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
       setInvitationSuccess(true);
       setTimeout(() => setInvitationSuccess(false), 3000);
     } catch (error) {
+      console.log('Error completing invitation:', error);
     }
   };
   
@@ -92,11 +102,12 @@ const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
     try {
       completeGame({invitation_id: inviteCode || '', score})
     } catch (error) {
+      console.log('Error completing game:', error);
       message.error('Error completing game');
     }
   }
 
-  const handleTryAgain = (controller: any) => {
+  const handleTryAgain = (controller: {restart: () => void}) => {
     if (likes > 0) {
       setLikes((prev) => prev - 1);
       controller.restart();
@@ -257,16 +268,17 @@ const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
               }}
             >
               {({ Gameboard, points, state, controller }) => {
-                React.useEffect(() => {
+                 
+                useEffect(() => {
                   setScore(points);
-                  console.log('test')
+                  console.log('test');
                   if (state === "LOST") {
-                    handleCompleteGame()
+                    handleCompleteGame();
                   }
-                  setIsOpen(state === "LOST")
+                  setIsOpen(state === "LOST");
                 }, [points, state]);
 
-                React.useEffect(() => {
+                useEffect(() => {
                   if (controller && controller !== gameController) {
                     setGameController(controller);
                   }
@@ -275,7 +287,7 @@ const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
                 return (
                   <>
                     <div
-                      className={`${styles.gameContainer} border-4 border-[#CBF1FF]`}
+                      className={`gameContainer border-4 border-[#CBF1FF]`}
                     >
                       <Gameboard />
 

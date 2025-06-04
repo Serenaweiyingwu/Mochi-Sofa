@@ -1,6 +1,8 @@
 // components/three/setupControls.ts
 import * as THREE from "three";
+// @ts-expect-error: OrbitControls does not have proper TypeScript definitions
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+// @ts-expect-error: OrbitControls does not have proper TypeScript definitions
 import { TransformControls } from "three/examples/jsm/controls/TransformControls";
 
 export default function ControlSetup(
@@ -11,7 +13,7 @@ export default function ControlSetup(
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enablePan = false;
     controls.mouseButtons = {
-        LEFT: null as any,
+        LEFT: null as unknown,
         MIDDLE: THREE.MOUSE.DOLLY,
         RIGHT: THREE.MOUSE.ROTATE,
     };
@@ -33,14 +35,20 @@ export default function ControlSetup(
     scene.add(rotateControls.getHelper());
 
     // Mutual locking
-    translateControls.addEventListener("dragging-changed", (e) => {
+    translateControls.addEventListener(
+      "dragging-changed",
+      (e: { value: boolean }) => {
         controls.enabled = !e.value;
         rotateControls.enabled = !e.value;
-    });
-    rotateControls.addEventListener("dragging-changed", (e) => {
-        controls.enabled = !e.value;
-        translateControls.enabled = !e.value;
-    });
+      }
+    );
+    rotateControls.addEventListener(
+      "dragging-changed",
+      (e: { value: boolean }) => {
+      controls.enabled = !e.value;
+      translateControls.enabled = !e.value;
+      }
+    );
 
     return { controls, translateControls, rotateControls };
 }

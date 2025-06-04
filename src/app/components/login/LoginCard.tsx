@@ -1,7 +1,7 @@
 "use client";
 
 import { LeftOutlined } from "@ant-design/icons";
-import { Button, Card, ConfigProvider, Divider, Input, message, Tabs, TabsProps } from "antd";
+import { Button, Card, ConfigProvider, Divider, Input, Tabs, TabsProps } from "antd";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ContinueButton from "./continueButton";
@@ -14,7 +14,6 @@ import { handleLoginSuccess } from "@/utils/auth";
 import {
   useExchangeGoogleTokenMutation,
   useLazyGetGoogleAuthUrlQuery,
-  useLazyGetUsersQuery,
   useLoginMutation,
   useRequestOtpMutation,
   useVerifyOtpMutation,
@@ -57,7 +56,6 @@ const LoginCard = ({ className }: { className?: string }) => {
   const [requestOtp] = useRequestOtpMutation();
   const [verifyOtp] = useVerifyOtpMutation();
   const [login] = useLoginMutation();
-  const [getUsers] = useLazyGetUsersQuery();
 
   useEffect(() => {
     if (
@@ -86,7 +84,7 @@ const LoginCard = ({ className }: { className?: string }) => {
         return;
       }
       console.log(code, 'code');
-      if (code) {
+      if (code && typeof code === 'string') {
         try {
           const res = await exchangeGoogleToken({
             exchangeTokenV1Request: {
@@ -96,15 +94,15 @@ const LoginCard = ({ className }: { className?: string }) => {
           });
           handleLoginSuccess(res.user, res.token, router);
           window.location.href = '/';
-        } catch (error: any) {
-          message.error("Something went wrong, please try again");
+        } catch (error) {
+          console.error("Error exchanging Google token:", error);
           router.replace('/');
         }
       }
     };
 
     loginWithGoogle();
-  }, [exchangeGoogleToken, searchParams, router, isBrowser]);
+  }, [exchangeGoogleToken, searchParams, router, isBrowser, getQueryParam]);
 
   useEffect(() => {
     setEmailCode("");
@@ -121,14 +119,9 @@ const LoginCard = ({ className }: { className?: string }) => {
         location.href = data.authUrl;
       }
     } catch (error) {
-      message.error("Failed to get Google auth URL");
+      console.error("Failed to get Google auth URL:", error);
     }
   }, [getGoogleAuthUrl]);
-
-  const backToFirstStep = useCallback(() => {
-    setEmailError(null);
-    setLoginSteps(Steps.EMAIL_FIRST_STEP);
-  }, []);
 
   const backToInputEmailStep = useCallback(() => {
     setNewEmailUserNameError(null);
@@ -171,13 +164,12 @@ const LoginCard = ({ className }: { className?: string }) => {
             
             handleLoginSuccess(res.user, res.token, router);
             setTimeout(() => window.location.reload(), 100);
-          } catch (error: any) {
+          } catch (error) {
+            console.error("Login failed:", error);
             setLoginMethod('code');
-            message.error("Login failed, try using verification code");
           }
         }
       } catch (error) {
-        message.error("Login failed, please try again");
         console.log('error', error);
       } finally {
         setSubmitEmailLoading(false);
@@ -223,10 +215,9 @@ const LoginCard = ({ className }: { className?: string }) => {
             handleLoginSuccess(user, token, router);
             setTimeout(() => window.location.reload(), 100);
           } else {
-            message.error("Invalid code");
           }
-        } catch (err: any) {
-          message.error("Something went wrong, please try again");
+        } catch (err) {
+          console.error("Error verifying OTP:", err);
           router.replace("/login");
         } finally {
           setEmailCodeLoading(false);
@@ -252,10 +243,14 @@ const LoginCard = ({ className }: { className?: string }) => {
           handleLoginSuccess(user, token, router);
           setTimeout(() => window.location.reload(), 100);
         } else {
-          message.error("Invalid code");
         }
-      } catch (err: any) {
-        setEmailCodeError(err.data || "Invalid verification code");
+      } catch (err: unknown) {
+        console.error("Error verifying OTP:", err);
+        if (err && typeof err === "object" && "data" in err) {
+          setEmailCodeError((err as { data: string }).data || "Invalid verification code");
+        } else {
+          setEmailCodeError("Invalid verification code");
+        }
       } finally {
         setEmailCodeLoading(false);
       }
@@ -421,7 +416,7 @@ const LoginCard = ({ className }: { className?: string }) => {
                   />
                   <br />
                   <span className="text-black text-2xl font-semibold">
-                    You're almost signed up
+                    You&apos;re almost signed up
                   </span>
                 </div>
                 <div className="mt-2 text-xs text-black">{`Enter the code we sent to ${email} to finish signing up.`}</div>
@@ -451,7 +446,7 @@ const LoginCard = ({ className }: { className?: string }) => {
                 </ContinueButton>
                 {resendTimer > 0 ? (
                   <div className="mt-6 text-xs text-black">
-                    Didn't get the code? Resend code in {resendTimer} seconds
+                    Didn&apos;t get the code? Resend code in {resendTimer} seconds
                   </div>
                 ) : (
                   <Button
@@ -505,7 +500,7 @@ const LoginCard = ({ className }: { className?: string }) => {
 
                 {resendTimer > 0 ? (
                   <div className="mt-6 text-xs text-black">
-                    Didn't get the code? Resend code in {resendTimer} seconds
+                    Didn&apos;t get the code? Resend code in {resendTimer} seconds
                   </div>
                 ) : (
                   <Button
@@ -564,7 +559,7 @@ const LoginCard = ({ className }: { className?: string }) => {
 
 
             <div className="mt-6 font-normal text-xs md:text-sm text-content-black">
-              By continuing, you agree to Mochi Sofa's{" "}
+              By continuing, you agree to Mochi Sofa&apos;s{" "}
               <a href="#" className="underline">
                 Terms of Use
               </a>

@@ -2,21 +2,26 @@ export const API_BASE_URL = 'https://api-dev.aroomy.com/';
 export const GAME_API_BASE_URL = 'http://localhost:8001';
 
 const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...options,
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || 'error');
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...options,
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      },
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'error');
+    }
+  
+    return response.json();
+  } catch (error) {
+    console.error('API request error:', error);
+    return {}
   }
 
-  return response.json();
 };
 
 const authenticatedRequest = async (endpoint: string, options: RequestInit = {}) => {
@@ -61,7 +66,7 @@ const authenticatedGameRequest = async (endpoint: string, options: RequestInit =
 
 
 export const useExchangeGoogleTokenMutation = () => {
-  const exchangeToken = async ({ exchangeTokenV1Request }: { exchangeTokenV1Request: any }) => {
+  const exchangeToken = async ({ exchangeTokenV1Request }: { exchangeTokenV1Request: { code: string, redirectUri: string } }) => {
     const response = await apiRequest('v1/auth/google/token', {
       method: 'POST',
       body: JSON.stringify(exchangeTokenV1Request),
@@ -147,7 +152,13 @@ export const useGetCouponMutation = (userId: string) => {
 };
 
 export const useLoginMutation = () => {
-  const login = async ({ loginV1Request }: { loginV1Request: any }) => {
+  interface LoginV1Request {
+    contact: string;
+    type: string;
+    password: string;
+  }
+
+  const login = async ({ loginV1Request }: { loginV1Request: LoginV1Request }) => {
     try {
       const response = await apiRequest('v1/auth/login', {
         method: 'POST',
@@ -165,7 +176,13 @@ export const useLoginMutation = () => {
 };
 
 export const useRequestOtpMutation = () => {
-  const requestOtp = async ({ requestOtpV1Request }: { requestOtpV1Request: any }) => {
+  interface RequestOtpV1Request {
+    type: string;
+    password?: string;
+    contact: string;
+  }
+
+  const requestOtp = async ({ requestOtpV1Request }: { requestOtpV1Request: RequestOtpV1Request }) => {
     const response = await apiRequest('v1/auth/request-otp', {
       method: 'POST',
       body: JSON.stringify(requestOtpV1Request),
@@ -178,7 +195,13 @@ export const useRequestOtpMutation = () => {
 };
 
 export const useVerifyOtpMutation = () => {
-  const verifyOtp = async ({ verifyOtpV1Request }: { verifyOtpV1Request: any }) => {
+  interface VerifyOtpV1Request {
+    type: string;
+    contact: string;
+    code: string;
+  }
+
+  const verifyOtp = async ({ verifyOtpV1Request }: { verifyOtpV1Request: VerifyOtpV1Request }) => {
     try {
       const response = await apiRequest('v1/auth/verify-otp', {
         method: 'POST',

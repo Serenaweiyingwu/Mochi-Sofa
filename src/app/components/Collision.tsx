@@ -9,7 +9,7 @@ export function checkCollision(
     const selfMeshes = new Set<THREE.Object3D>();
 
     moving.traverse((child) => {
-        if ((child as any).geometry) {
+        if (child instanceof THREE.Mesh && child.geometry) {
             const mesh = child as THREE.Mesh;
             const geometry = mesh.geometry;
             if (!geometry.boundingBox) geometry.computeBoundingBox();
@@ -48,7 +48,7 @@ export function updateOBBs(
 ) {
     for (const entry of obbs) {
         const object = entry.target;
-        const geometry = (object as any).geometry;
+        const geometry = (object as THREE.Mesh).geometry;
         if (!geometry || !geometry.boundingBox) geometry?.computeBoundingBox();
         if (!geometry?.boundingBox) continue;
 

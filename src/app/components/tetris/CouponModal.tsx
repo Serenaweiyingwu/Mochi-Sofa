@@ -38,7 +38,7 @@ const CouponModal: React.FC<CouponModalProps> = ({ isOpen, onClose, couponCode =
         </div>
 
         <div className="bg-[#E6E6E6] rounded-md p-4 mb-6 w-full flex items-center justify-center gap-6">
-          <span className={`text-2xl ${couponCode ? "text-[#000000]" : "text-[#1A305B]"} font-bold`}>{couponCode || "Not available yet"}</span>
+          <span className={`text-2xl text-nowrap ${couponCode ? "text-[#000000]" : "text-[#1A305B]"} font-bold`}>{couponCode || "Not available yet"}</span>
           {couponCode && <button
             onClick={handleCopyCode}
             className="bg-[#5CB2D1] h-[24px] flex justify-center items-center text-[#1A305B] font-bold px-4 py-2 rounded-md hover:bg-[#4a9ab8] transition-colors"

@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
-import { Group } from "three";
 import { OBB } from "three/examples/jsm/math/OBB.js";
 import initialize from "@/app/components/Initialization";
 import ControlSetup from "@/app/components/ControlSetup";
@@ -62,8 +61,8 @@ export default function Scene({ onSceneReady}: SceneProps){
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
 
-        let lastValidPosition = new THREE.Vector3();
-        let lastValidRotation = new THREE.Euler();
+        const lastValidPosition = new THREE.Vector3();
+        const lastValidRotation = new THREE.Euler();
 
         translateControls.addEventListener("mouseDown", () => {
             if (translateControls.object) lastValidPosition.copy(translateControls.object.position);
@@ -108,7 +107,7 @@ export default function Scene({ onSceneReady}: SceneProps){
         animate();
 
         let isPlacing = false;
-        let placingBox: Group = null;
+        let placingBox: THREE.Object3D | null = null;
         let placingYOffset = 0;
 
         const interactionPlane = new THREE.Mesh(
@@ -144,7 +143,7 @@ export default function Scene({ onSceneReady}: SceneProps){
             }
 
             placingBox.traverse((child) => {
-                if ((child as any).geometry) {
+                if ((child as THREE.Mesh).geometry) {
                     const mesh = child as THREE.Mesh;
                     const geometry = mesh.geometry;
                     if (!geometry.boundingBox) geometry.computeBoundingBox();
@@ -237,7 +236,7 @@ export default function Scene({ onSceneReady}: SceneProps){
             renderer.domElement.removeEventListener("click", onClick);
             renderer.domElement.removeEventListener("pointerdown", onPointerDown);
         };
-    }, []);
+    }, [onSceneReady]);
 
     return <div ref={containerRef} style={{ width: "100%", height: "100%" }} />;
 }
