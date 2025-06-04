@@ -156,7 +156,7 @@ export function createPBRMaterial(textures: Record<string, THREE.Texture>): THRE
         metalnessMap: textures.metallic,
         metalness: 0.6,
         alphaMap: textures.alpha,
-        transparent: true,
+        transparent: false,
         alphaTest: 0.1,
         emissiveMap: textures.emission,
         emissive: new THREE.Color(0x000000),

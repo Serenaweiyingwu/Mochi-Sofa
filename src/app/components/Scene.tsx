@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import {useEffect, useRef} from "react";
 import * as THREE from "three";
-import { OBB } from "three/examples/jsm/math/OBB.js";
+import {OBB} from "three/examples/jsm/math/OBB.js";
 import initialize from "@/app/components/Initialization";
 import ControlSetup from "@/app/components/ControlSetup";
 import {checkCollision, updateOBBs} from "@/app/components/Collision";
@@ -24,7 +24,7 @@ export default function Scene({ onSceneReady}: SceneProps){
 
         let scene = new THREE.Scene();
         // camera setting
-        const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+        const camera = new THREE.PerspectiveCamera(25, container.clientWidth / container.clientHeight, 0.1, 1000);
         camera.position.set(1, 1, 2);
 
 
@@ -36,13 +36,13 @@ export default function Scene({ onSceneReady}: SceneProps){
             powerPreference: "high-performance"
         });
         renderer.setSize(container.clientWidth, container.clientHeight);
-        renderer.setClearColor("#fdf8f4");
+        renderer.setClearColor("#f0f0f0");
 
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 0.7;
+        renderer.toneMappingExposure = 0.6;
         renderer.outputColorSpace = THREE.SRGBColorSpace;
 
         // Additional renderer settings to prevent wireframe artifacts
@@ -61,41 +61,59 @@ export default function Scene({ onSceneReady}: SceneProps){
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
 
-        const lastValidPosition = new THREE.Vector3();
-        const lastValidRotation = new THREE.Euler();
+        let lastPosition = new THREE.Vector3();
+        let currentPosition = new THREE.Vector3();
+        let lastRotation = new THREE.Euler();
+        let currentRotation = new THREE.Euler();
 
         translateControls.addEventListener("mouseDown", () => {
-            if (translateControls.object) lastValidPosition.copy(translateControls.object.position);
+            if (translateControls.object) {
+                lastPosition.copy(translateControls.object.position);
+            }
         });
 
         translateControls.addEventListener("objectChange", () => {
             const obj = translateControls.object;
-            if (obj) {
-                if (!checkCollision(obj, obbs)) {
-                    lastValidPosition.copy(obj.position);
-                } else {
-                    obj.position.copy(lastValidPosition);
+            if (!obj) return;
 
-                }
-                obj.updateMatrixWorld(true);
+            currentPosition.copy(obj.position);
+
+            // 临时更新以计算矩阵
+            obj.updateMatrixWorld(true);
+
+            if (checkCollision(obj, obbs)) {
+                // 回退到上一次合法位置
+                obj.position.copy(lastPosition);
+            } else {
+                // 合法，更新最后位置
+                lastPosition.copy(currentPosition);
             }
+
+            obj.updateMatrixWorld(true);
             updateOBBs(obbs);
         });
 
         rotateControls.addEventListener("mouseDown", () => {
-            if (rotateControls.object) lastValidRotation.copy(rotateControls.object.rotation);
+            if (rotateControls.object) {
+                lastRotation.copy(rotateControls.object.rotation);
+            }
         });
 
         rotateControls.addEventListener("objectChange", () => {
             const obj = rotateControls.object;
-            if (obj) {
-                if (!checkCollision(obj, obbs)) {
-                    lastValidRotation.copy(obj.rotation);
-                } else {
-                    obj.rotation.copy(lastValidRotation);
-                }
-                obj.updateMatrixWorld(true);
+            if (!obj) return;
+
+            currentRotation.copy(obj.rotation);
+
+            obj.updateMatrixWorld(true);
+
+            if (checkCollision(obj, obbs)) {
+                obj.rotation.copy(lastRotation);
+            } else {
+                lastRotation.copy(currentRotation);
             }
+
+            obj.updateMatrixWorld(true);
             updateOBBs(obbs);
         });
 
@@ -165,7 +183,7 @@ export default function Scene({ onSceneReady}: SceneProps){
                     );
                     helper.matrixAutoUpdate = false;
                     helper.matrix.copy(mesh.matrixWorld);
-                    helper.visible = true; //bounding box visualization
+                    helper.visible = false; //bounding box visualization
                     scene.add(helper);
 
 
@@ -187,10 +205,18 @@ export default function Scene({ onSceneReady}: SceneProps){
             const intersects = raycaster.intersectObjects(selectableObjects, true);
 
             if (intersects.length > 0) {
-                const target = intersects[0].object;
-                const root = target.parent?.type === "Group" ? target.parent : target;
-                translateControls.attach(root);
-                rotateControls.attach(root);
+                let root: THREE.Object3D = intersects[0].object;
+                while (root.parent && !selectableObjects.includes(root)) {
+                    root = root.parent;
+                }
+
+                if (selectableObjects.includes(root)) {
+                    translateControls.attach(root);
+                    rotateControls.attach(root);
+                } else {
+                    translateControls.detach();
+                    rotateControls.detach();
+                }
             } else {
                 translateControls.detach();
                 rotateControls.detach();
