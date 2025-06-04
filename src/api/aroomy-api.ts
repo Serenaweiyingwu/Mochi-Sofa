@@ -127,7 +127,7 @@ export const useGetInviteQuery = (userId: string) => {
 };
 
 export const useCompleteGameMutation = () => {
-  const completeGameResponse = async (completeGameV1Request: {invitation_id: string, score: number}) => {
+  const completeGameResponse = async (completeGameV1Request: {invitation_id: string, score: number, user_id: string}) => {
     const response = await authenticatedGameRequest(`/api/invitation-game/complete-game`, {
       method: 'POST',
       body: JSON.stringify(completeGameV1Request),

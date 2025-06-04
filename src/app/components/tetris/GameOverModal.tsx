@@ -53,7 +53,6 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50 transition-all duration-300">
       <div
-        onClick={() => {onClose();handleTryAgain();}}
         className="fixed inset-0 bg-[#1A305B99] transition-opacity duration-300"
       />
 
@@ -63,7 +62,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
           <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setShowLifeModal(false)}></div>
           <div className="bg-white rounded-xl p-6 max-w-xs w-full relative z-10 flex flex-col items-center">
             <button
-              onClick={() => setShowLifeModal(false)}
+              onClick={() => {setShowLifeModal(false);onClose();}}
               className="absolute right-4 top-4 text-gray-500"
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -151,10 +150,10 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
             />
           </div>
 
-          <div className="flex justify-between mt-4">
+          <div className="flex justify-between gap-8 mt-4">
             <button
               onClick={handleTryAgain}
-              className="bg-[#CBF1FF] text-[#333A3F] font-extrabold p-3 rounded-lg flex gap-1 items-center justify-center w-[45%]"
+              className="bg-[#CBF1FF] flex-1 text-[#333A3F] font-extrabold p-3 rounded-lg flex gap-1 items-center justify-center w-[45%]"
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M16.023 9.34841H21.0156V9.34663M2.98438 19.6444V14.6517M2.98438 14.6517L7.97702 14.6517M2.98438 14.6517L6.16527 17.8347C7.15579 18.8271 8.41285 19.58 9.8646 19.969C14.2657 21.1483 18.7895 18.5364 19.9687 14.1353M4.03097 9.86484C5.21024 5.46374 9.73402 2.85194 14.1351 4.03121C15.5869 4.4202 16.8439 5.17312 17.8345 6.1655L21.0156 9.34663M21.0156 4.3558V9.34663" stroke="#333A3F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -163,12 +162,12 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
               Try again
             </button>
 
-            <button
+            {points !== 0 && <button
               onClick={onTakeOffer}
               className="bg-[#1A305B] text-base text-white font-extrabold p-3 rounded-lg flex gap-1 items-center justify-center w-[45%]"
             >
               Take the offer
-            </button>
+            </button>}
           </div>
 
           <button

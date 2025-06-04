@@ -23,6 +23,7 @@ const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
     moveLeft: () => void;
     moveRight: () => void;
     hardDrop: () => void;
+    pause: () => void;
     flipClockwise: () => void;
     flipCounterclockwise: () => void;
     restart: () => void;
@@ -41,12 +42,36 @@ const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
   const [couponCode, setCouponCode] = useState<string>("");
   useEffect(() => {
     const userInfo = localStorage.getItem('user_info');
-    
     if (userInfo) {
       const user = JSON.parse(userInfo);
       setUserId(user.id);
     } 
   }, []);
+
+  const handleGetCoupon = React.useCallback(async (init?: boolean) => {
+    const res = await getCoupon();
+    if (res.coupons.length > 0 && init) {
+      gameController?.pause();
+      setCouponCode(res.coupons[0].discount_code);
+      setShowCouponModal(true);
+      return
+    }
+    if (init) {
+      return;
+    }
+    if (res.coupons.length > 0) {
+      setCouponCode(res.coupons[0].discount_code);
+    }
+    setShowCouponModal(true);
+
+  }, [getCoupon, gameController]);
+
+  useEffect(() => {
+    if (userId){
+      handleGetCoupon(true)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId])
   
   const isUserLoggedIn = () => {
     return userId !== "" && userId !== undefined;
@@ -55,7 +80,6 @@ const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
   useEffect(() => {
     if (inviteCode && userId && isUserLoggedIn()) {
       const processedInvites = JSON.parse(localStorage.getItem('processedInvites') || '[]');
-      
       if (inviteCode === userId) {
         return;
       }
@@ -95,12 +119,20 @@ const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
     router.push("/");
   };
 
-  const handleCompleteGame = () => {
-    if (!inviteCode) {
-      return;
-    }
+  const handleCompleteGame = (selfComplete?: boolean) => {
+    const calculateDiscount = (score: number): number => {
+      if (score >= 10000) return 30;
+      if (score >= 5000) return 5;
+      if (score >= 4000) return 3;
+      if (score >= 3000) return 2;
+      if (score >= 2000) return 1;
+      return 0;
+    };
     try {
-      completeGame({invitation_id: inviteCode || '', score})
+      completeGame({invitation_id: !selfComplete ? inviteCode || "" : '', score: calculateDiscount(score), user_id: userId})
+      if (selfComplete) {
+        handleGetCoupon();
+      }
     } catch (error) {
       console.log('Error completing game:', error);
       message.error('Error completing game');
@@ -114,13 +146,6 @@ const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
     }
   };
 
-  const handleGetCoupon = async () => {
-    const res = await getCoupon();
-    setShowCouponModal(true);
-    if (res.coupons.length > 0) {
-      setCouponCode(res.coupons[0].discount_code);
-    }
-  }
 
   const handleShareForLives = () => {
     setLikes((prev) => prev + 2);
@@ -130,6 +155,10 @@ const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
   };
 
   const handleInviteFriend = () => {
+    if (couponCode) {
+      setShowCouponModal(true);
+      return;
+    }
     setShowInviteModal(true);
   };
   
@@ -191,7 +220,7 @@ const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
                 <div className="flex justify-end absolute bottom-0 right-0 gap-2">
                   <button
                     className="bg-[#5CB2D1] h-6 flex justify-center items-center text-white px-3 py-1 rounded-md hover:bg-[#4a9ab8] transition-colors"
-                    onClick={handleGetCoupon}
+                    onClick={() => handleGetCoupon()}
                   >
                     Coupon
                   </button>
@@ -271,9 +300,10 @@ const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
                  
                 useEffect(() => {
                   setScore(points);
-                  console.log('test');
                   if (state === "LOST") {
-                    handleCompleteGame();
+                    if (inviteCode) {
+                      handleCompleteGame();
+                    }
                   }
                   setIsOpen(state === "LOST");
                 }, [points, state]);
@@ -294,12 +324,11 @@ const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
                       <GameOverModal
                         isOpen={isOpen}
                         onClose={() => {
-                          console.log("closing game over modal");
                           setIsOpen(false)
                         }}
-                        points={points}
+                        points={score}
                         onTryAgain={() => handleTryAgain(controller)}
-                        onTakeOffer={() => alert("Take Offer")}
+                        onTakeOffer={() => handleCompleteGame(true)}
                         onGetDirectDiscount={() => {
                           setIsOpen(false);
                           setShowInviteModal(true);
