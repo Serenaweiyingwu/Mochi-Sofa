@@ -1,14 +1,25 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Scene from "../Scene";
 import DesignScoreModal from "./DesignScoreModal";
 import SideMenu from "./SideMenu";
+import {
+  useAddtoCart,
+  useCheckout,
+  useGetCart,
+  useGetCartLink,
+  useGetColorQuery,
+} from "@/api/aroomy-api";
 
 const FurnitureCustomize = () => {
   const [sceneAPI, setSceneAPI] = useState<{
     startPlacingSeat?: (selectedColorName: string) => void;
     startPlacingBackrest?: (selectedColorName: string) => void;
   }>({});
+  const [getCart] = useGetCart();
+  const [checkout] = useCheckout();
+  const [addToCart] = useAddtoCart();
+  const [getCartLink] = useGetCartLink();
   const [selectedCategory] = useState("sofa");
   const [selectedColor, setSelectedColor] = useState("#FFD763");
   const [selectedColorName, setSelectedColorName] = useState("Grayish Brown");
@@ -17,6 +28,10 @@ const FurnitureCustomize = () => {
   const [showSocialLinks, setShowSocialLinks] = useState(false);
   const [showDesignScore, setShowDesignScore] = useState(false);
   const [showDiscount, setShowDiscount] = useState(false);
+  const [cartId, setCartId] = useState<string | null>(null);
+  const [variantId, setVariantId] = useState<number | null>(null);
+  const [getColors] = useGetColorQuery();
+  const [colors, setColors] = useState<{ id: string; value: string, variantId: number }[]>([]); 
   const [menuView, setMenuView] = useState<"menu" | "login">("menu");
   const colorContainerRef = useRef<HTMLDivElement>(null);
 
@@ -26,7 +41,7 @@ const FurnitureCustomize = () => {
     { id: "backrest", label: "Backrest" },
   ];
 
-  const colors = [
+  const colorsMap = [
     { id: "Grayish Brown", value: "#72675b" },
     { id: "Dark Gray", value: "#4a4a4a" },
     { id: "Dark Brown", value: "#3d2b1f" },
@@ -48,12 +63,46 @@ const FurnitureCustomize = () => {
     { id: "Charcoal Gray", value: "#36454f" },
     { id: "Light Grey Blue", value: "#a3b6c4" },
     { id: "Mist Blue", value: "#646d8c" },
-    { id: "Deep Navy Blue", value: "#000080" }
+    { id: "Deep Navy Blue", value: "#000080" },
   ];
+  const fetchCart = async () => {
+    try {
+      const response = await getCart();
+      setCartId(response.id);
+      console.log("Cart data fetched:", response);
+    } catch (error) {
+      console.error("Error fetching cart data:", error);
+    }
+  };
 
-  const handleColorSelect = (colorValue: string, colorName: string) => {
+  const fetchColors = async () => {
+    try {
+      const response = await getColors();
+      console.log(response.product);
+      const colors = colorsMap.filter((color) =>
+        response.product.variants.some((variant: { option1: string }) =>
+          variant.option1 === color.id
+        )
+      ).map((color) => {
+        const variant = response.product.variants.find((variant: { option1: string }) => variant.option1 === color.id);
+        return {...color, variantId: variant ? variant.id : null };
+      });
+      setColors(colors);
+    } catch (error) {
+      console.error("Error fetching colors:", error);
+    }
+  };
+
+  useEffect(() => {
+    // Fetch cart data when component mounts
+    fetchCart();
+    fetchColors();
+  }, []);
+
+  const handleColorSelect = (colorValue: string, colorName: string, variantId: number) => {
     setSelectedColor(colorValue);
     setSelectedColorName(colorName);
+    setVariantId(variantId);
   };
 
   const handleComplete = () => {
@@ -70,7 +119,21 @@ const FurnitureCustomize = () => {
 
   const handleCheckout = () => {
     // Checkout logic here
+    if (!cartId) {
+      console.error("No cart ID available for checkout");
+      return;
+    }
     console.log("Proceeding to checkout");
+    checkout(cartId)
+      .then((response) => {
+        // Redirect to the checkout URL
+        if (response && response.checkout_url) {
+          window.open(response.checkout_url, "_blank");
+        }
+      })
+      .catch((error) => {
+        console.error("Checkout error:", error);
+      });
     setShowDesignScore(false);
   };
 
@@ -99,7 +162,24 @@ const FurnitureCustomize = () => {
             />
           </div>
           <div className="flex items-center">
-            <button className="relative p-2">
+            <button
+              onClick={() => {
+                if (!cartId) {
+                  window.open("https://281ca3-aa.myshopify.com/cart", "_blank");
+                  return;
+                }
+                getCartLink(cartId)
+                  .then((response) => {
+                    if (response && response.cart_url) {
+                      window.open(response.cart_url, "_blank");
+                    }
+                  })
+                  .catch((error) => {
+                    console.error("Error fetching cart link:", error);
+                  });
+              }}
+              className="relative p-2"
+            >
               <svg
                 width="24"
                 height="24"
@@ -221,6 +301,17 @@ const FurnitureCustomize = () => {
                         onClick={() => {
                           if (category.id === "sofa") {
                             sceneAPI?.startPlacingSeat?.(selectedColorName);
+                            const cartItem = {
+                              variant_id:
+                                `gid://shopify/ProductVariant/${variantId}`,
+                              quantity: 1,
+                              properties: {
+                                title: selectedColorName,
+                                variant: selectedColorName,
+                                image: "",
+                              },
+                            };
+                            addToCart(cartItem);
                           } else {
                             sceneAPI?.startPlacingBackrest?.(selectedColorName);
                           }
@@ -258,7 +349,7 @@ const FurnitureCustomize = () => {
                             selectedColor === color.value ? "border-4" : "border-1"
                         }`}
                         style={{backgroundColor: color.value}}
-                        onClick={() => handleColorSelect(color.value, color.id)}
+                        onClick={() => handleColorSelect(color.value, color.id, color.variantId)}
                         aria-label={`Select ${color.id} color`}
                     >
                       {index < 5 && (
