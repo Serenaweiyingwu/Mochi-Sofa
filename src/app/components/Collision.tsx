@@ -34,7 +34,7 @@ export function checkCollision(
         for (const target of obbs) {
             if (selfMeshes.has(target.target)) continue;
             if (testOBB.intersectsOBB(target.obb)) {
-                console.log('collision detected')
+                console.log('collision detected');
                 return true;
             }
         }

@@ -11,7 +11,7 @@ const FurnitureCustomize = () => {
   }>({});
   const [selectedCategory] = useState("sofa");
   const [selectedColor, setSelectedColor] = useState("#FFD763");
-  const [selectedColorName, setSelectedColorName] = useState("Orange");
+  const [selectedColorName, setSelectedColorName] = useState("Grayish Brown");
   const [showBanner, setShowBanner] = useState(true);
   const [showMenu, setShowMenu] = useState(false);
   const [showSocialLinks, setShowSocialLinks] = useState(false);
@@ -19,6 +19,7 @@ const FurnitureCustomize = () => {
   const [showDiscount, setShowDiscount] = useState(false);
   const [menuView, setMenuView] = useState<"menu" | "login">("menu");
   const colorContainerRef = useRef<HTMLDivElement>(null);
+
 
   const categories = [
     { id: "sofa", label: "Sofa" },
@@ -210,24 +211,36 @@ const FurnitureCustomize = () => {
         <main className="px-6 py-8">
           {/* Categories */}
           <div className="mb-8 flex gap-3">
-            {categories.map((category) => (
-              <div key={category.id} className="flex flex-col items-center">
-                <button
-                  onClick={() => {
-                    if (category.id === "sofa") {
-                      sceneAPI?.startPlacingSeat?.(selectedColorName);
-                    } else {
-                      sceneAPI?.startPlacingBackrest?.(selectedColorName);
-                    }
-                  }}
-                  key={category.id}
-                  className={`relative flex p-0 w-24 h-20 flex-col items-center justify-center rounded-[20px] border-2 overflow-hidden border-[#5CB2D180]`}
-                ></button>
-                <span className="text-center text-xl font-normal mt-1">
-                  {category.label}
-                </span>
-              </div>
-            ))}
+            {categories.map((category) => {
+              const imageName = `${selectedColorName}_${category.label}.png`;
+              const imagePath = `/preview/${imageName}`;
+
+              return (
+                  <div key={category.id} className="flex flex-col items-center">
+                    <button
+                        onClick={() => {
+                          if (category.id === "sofa") {
+                            sceneAPI?.startPlacingSeat?.(selectedColorName);
+                          } else {
+                            sceneAPI?.startPlacingBackrest?.(selectedColorName);
+                          }
+                        }}
+                        key={category.id}
+                        className={`relative flex p-0 w-24 h-20 flex-col items-center justify-center rounded-[20px] border-2 overflow-hidden border-[#5CB2D180]`}
+                        style={{
+                          backgroundImage: `url(${imagePath})`,
+                          backgroundSize: "cover",
+                          backgroundPosition: "center",
+                          backgroundRepeat: "no-repeat",
+                        }}
+                        aria-label={`Preview of ${selectedColorName} ${category.label}`}
+                    ></button>
+                    <span className="text-center text-xl font-normal mt-1">
+          {category.label}
+        </span>
+                  </div>
+              );
+            })}
           </div>
 
           {/* Color Selection */}
@@ -235,52 +248,52 @@ const FurnitureCustomize = () => {
             <h2 className="text-xl font-extrabold mb-3">Color</h2>
             <div className="flex">
               <div
-                ref={colorContainerRef}
-                className="flex items-center gap-6 overflow-x-auto py-2 px-1 scroll-smooth"
+                  ref={colorContainerRef}
+                  className="flex items-center gap-6 overflow-x-auto py-2 px-1 scroll-smooth"
               >
                 {colors.map((color, index) => (
-                  <button
-                    key={color.id}
-                    className={`w-10 h-10 p-0 rounded-full border-[#E6E6E6] flex-shrink-0 ${
-                      selectedColor === color.value ? "border-4" : "border-1"
-                    }`}
-                    style={{ backgroundColor: color.value }}
-                    onClick={() => handleColorSelect(color.value, color.id)}
-                    aria-label={`Select ${color.id} color`}
-                  >
-                    {index < 5 && (
-                      <span className="sr-only">{color.id} color</span>
-                    )}
-                  </button>
+                    <button
+                        key={color.id}
+                        className={`w-10 h-10 p-0 rounded-full border-[#E6E6E6] flex-shrink-0 ${
+                            selectedColor === color.value ? "border-4" : "border-1"
+                        }`}
+                        style={{backgroundColor: color.value}}
+                        onClick={() => handleColorSelect(color.value, color.id)}
+                        aria-label={`Select ${color.id} color`}
+                    >
+                      {index < 5 && (
+                          <span className="sr-only">{color.id} color</span>
+                      )}
+                    </button>
                 ))}
               </div>
               <button
-                onClick={handleColorScroll}
-                className="flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity ml-1"
-                aria-label="Scroll colors"
+                  onClick={handleColorScroll}
+                  className="flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity ml-1"
+                  aria-label="Scroll colors"
               >
                 <svg
-                  width="21"
-                  height="32"
-                  viewBox="0 0 21 32"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
+                    width="21"
+                    height="32"
+                    viewBox="0 0 21 32"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
                 >
                   <rect
-                    x="20.5"
-                    y="31"
-                    width="20"
-                    height="30"
-                    rx="10"
-                    transform="rotate(180 20.5 31)"
-                    fill="white"
-                    stroke="#DAE8EE"
+                      x="20.5"
+                      y="31"
+                      width="20"
+                      height="30"
+                      rx="10"
+                      transform="rotate(180 20.5 31)"
+                      fill="white"
+                      stroke="#DAE8EE"
                   />
                   <path
-                    fillRule="evenodd"
-                    clipRule="evenodd"
-                    d="M8.40717 21.9053C8.11428 21.6124 8.11428 21.1376 8.40717 20.8447L12.7518 16.5L8.40717 12.1553C8.11428 11.8624 8.11428 11.3876 8.40717 11.0947C8.70006 10.8018 9.17494 10.8018 9.46783 11.0947L13.8125 15.4393C14.3983 16.0251 14.3983 16.9749 13.8125 17.5607L9.46783 21.9053C9.17494 22.1982 8.70006 22.1982 8.40717 21.9053Z"
-                    fill="#6F767E"
+                      fillRule="evenodd"
+                      clipRule="evenodd"
+                      d="M8.40717 21.9053C8.11428 21.6124 8.11428 21.1376 8.40717 20.8447L12.7518 16.5L8.40717 12.1553C8.11428 11.8624 8.11428 11.3876 8.40717 11.0947C8.70006 10.8018 9.17494 10.8018 9.46783 11.0947L13.8125 15.4393C14.3983 16.0251 14.3983 16.9749 13.8125 17.5607L9.46783 21.9053C9.17494 22.1982 8.70006 22.1982 8.40717 21.9053Z"
+                      fill="#6F767E"
                   />
                 </svg>
               </button>
@@ -288,8 +301,8 @@ const FurnitureCustomize = () => {
           </div>
           <div className="px-6 py-8 pt-0">
             <button
-              onClick={handleComplete}
-              className="w-full py-3 px-4 bg-[#5CB2D1] text-white font-medium rounded-md transition duration-200"
+                onClick={handleComplete}
+                className="w-full py-3 px-4 bg-[#5CB2D1] text-white font-medium rounded-md transition duration-200"
             >
               Complete
             </button>
@@ -300,32 +313,35 @@ const FurnitureCustomize = () => {
       </div>
 
       {/* Design Score Modal */}
-      <DesignScoreModal 
+      <DesignScoreModal
           isOpen={showDesignScore}
-          onClose={() => {setShowDesignScore(false); setShowDiscount(false);}}
+          onClose={() => {
+            setShowDesignScore(false);
+            setShowDiscount(false);
+          }}
           onApplyDiscount={handleApplyDiscount}
           onCheckout={handleCheckout}
           showDiscount={showDiscount}
-        />
+      />
 
       {/* Side Menu Background Overlay */}
       <div
-        className={`fixed inset-0 bg-black transition-opacity duration-500 z-40 ${
-          showMenu
-            ? "bg-opacity-50 opacity-100"
-            : "bg-opacity-0 opacity-0 pointer-events-none"
-        }`}
-        onClick={() => setShowMenu(false)}
+          className={`fixed inset-0 bg-black transition-opacity duration-500 z-40 ${
+              showMenu
+                  ? "bg-opacity-50 opacity-100"
+                  : "bg-opacity-0 opacity-0 pointer-events-none"
+          }`}
+          onClick={() => setShowMenu(false)}
       />
 
       {/* Slide Panel Container */}
-      <SideMenu 
-        isOpen={showMenu}
-        onClose={() => setShowMenu(false)}
-        showSocialLinks={showSocialLinks}
-        toggleSocialLinks={toggleSocialLinks}
-        menuView={menuView}
-        setMenuView={setMenuView}
+      <SideMenu
+          isOpen={showMenu}
+          onClose={() => setShowMenu(false)}
+          showSocialLinks={showSocialLinks}
+          toggleSocialLinks={toggleSocialLinks}
+          menuView={menuView}
+          setMenuView={setMenuView}
       />
     </>
   );

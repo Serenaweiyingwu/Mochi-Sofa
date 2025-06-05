@@ -3,7 +3,6 @@ import * as THREE from "three";
 // @ts-expect-error: OrbitControls does not have proper TypeScript definitions
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 // @ts-expect-error: OrbitControls does not have proper TypeScript definitions
-import { TransformControls } from "three/examples/jsm/controls/TransformControls";
 
 export default function ControlSetup(
     camera: THREE.PerspectiveCamera,
@@ -19,36 +18,6 @@ export default function ControlSetup(
     };
     controls.update();
 
-    const translateControls = new TransformControls(camera, renderer.domElement);
-    translateControls.setMode("translate");
-    translateControls.setTranslationSnap(0.001);
-    translateControls.space = "world";
-    scene.add(translateControls.getHelper());
 
-    const rotateControls = new TransformControls(camera, renderer.domElement);
-    rotateControls.setMode("rotate");
-    rotateControls.setRotationSnap(THREE.MathUtils.degToRad(15));
-    rotateControls.showX = false;
-    rotateControls.showY = true;
-    rotateControls.showZ = false;
-    rotateControls.space = "local";
-    scene.add(rotateControls.getHelper());
-
-    // Mutual locking
-    translateControls.addEventListener(
-      "dragging-changed",
-      (e: { value: boolean }) => {
-        controls.enabled = !e.value;
-        rotateControls.enabled = !e.value;
-      }
-    );
-    rotateControls.addEventListener(
-      "dragging-changed",
-      (e: { value: boolean }) => {
-      controls.enabled = !e.value;
-      translateControls.enabled = !e.value;
-      }
-    );
-
-    return { controls, translateControls, rotateControls };
+    return { controls };
 }
