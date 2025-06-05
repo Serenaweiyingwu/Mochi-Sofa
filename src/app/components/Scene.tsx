@@ -71,7 +71,7 @@ export default function Scene({ onSceneReady}: SceneProps){
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
 
-        let draggingAxis: "x" | "y" | "z" | null = null;
+        let draggingAxis: "x" | "y" | "z" | "rotateY" | null = null;
         const dragStartPoint = new THREE.Vector3();
         const dragStartObjectPosition = new THREE.Vector3();
 
