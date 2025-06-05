@@ -1,8 +1,8 @@
 import * as THREE from "three";
 import { GLTF } from "three/examples/jsm/Addons.js";
-// @ts-expect-error: OrbitControls does not have proper TypeScript definitions
+
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
-// @ts-expect-error: OrbitControls does not have proper TypeScript definitions
+
 import {mergeVertices} from "three/examples/jsm/utils/BufferGeometryUtils";
 export async function createBackrest(color: string): Promise<{ object: THREE.Group; yOffset: number}> {
     const group = new THREE.Group();
