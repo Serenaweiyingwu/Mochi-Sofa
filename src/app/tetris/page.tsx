@@ -29,12 +29,11 @@ export default function TetrisPage() {
   }, [router]);
   
   useEffect(() => {
-    const invite = "";
+    const invite = location.search.match(/invite=([^&]+)/)?.[1];
     if (invite && isLoggedIn) {
       const userInfo = localStorage.getItem('user_info');
       if (userInfo) {
         const user = JSON.parse(userInfo);
-        
         if (invite !== user.id && typeof invite === 'string') {
           setInviteCode(invite);
           localStorage.setItem('invitedBy', invite);
