@@ -10,7 +10,7 @@ export default function ControlSetup(
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enablePan = false;
     controls.mouseButtons = {
-        LEFT: null as unknown,
+        LEFT: null,
         MIDDLE: THREE.MOUSE.DOLLY,
         RIGHT: THREE.MOUSE.ROTATE,
     };
