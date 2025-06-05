@@ -1,6 +1,5 @@
 // components/three/setupControls.ts
 import * as THREE from "three";
-// @ts-expect-error: OrbitControls does not have proper TypeScript definitions
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 
