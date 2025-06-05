@@ -6,8 +6,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 export default function ControlSetup(
     camera: THREE.PerspectiveCamera,
-    renderer: THREE.WebGLRenderer,
-    scene: THREE.Scene
+    renderer: THREE.WebGLRenderer
 ) {
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enablePan = false;

@@ -102,7 +102,7 @@ export function createCustomGizmo(target: THREE.Object3D): THREE.Group {
             mat.depthTest = false;
             mat.depthWrite = false;
             mat.transparent = true;
-            (mat as any).opacity = 1.0;
+            mat.opacity = 1.0;
         }
     });
 

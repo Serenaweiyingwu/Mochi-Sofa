@@ -64,7 +64,7 @@ export default function Scene({ onSceneReady}: SceneProps){
         labelRenderer.domElement.style.pointerEvents = "none";
         container.appendChild(labelRenderer.domElement);
 
-        const {controls} = ControlSetup(camera, renderer, scene);
+        const {controls} = ControlSetup(camera, renderer);
 
         const selectableObjects: THREE.Object3D[] = [];
         const obbs: { obb: OBB; helper: THREE.LineSegments; target: THREE.Object3D }[] = [];
@@ -72,9 +72,8 @@ export default function Scene({ onSceneReady}: SceneProps){
         const mouse = new THREE.Vector2();
 
         let draggingAxis: "x" | "y" | "z" | null = null;
-        let dragStartPoint = new THREE.Vector3();
-        let dragStartObjectPosition = new THREE.Vector3();
-        let isDragging = false;
+        const dragStartPoint = new THREE.Vector3();
+        const dragStartObjectPosition = new THREE.Vector3();
 
         let currentSelectedObject: THREE.Object3D | null = null;
 
@@ -258,12 +257,10 @@ export default function Scene({ onSceneReady}: SceneProps){
                         draggingAxis = axis;
                         dragStartObjectPosition.copy(currentSelectedObject.position);
                         dragStartPoint.copy(hit.point);
-                        isDragging = true;
                         return;
                     } else if (axis === "rotateY") {
                         controls.enabled = false;
                         draggingAxis = axis;
-                        isDragging = true;
                         dragStartObjectPosition.copy(currentSelectedObject.position);
                         dragStartPoint.set(event.clientX, event.clientY, 0);
                         currentSelectedObject.userData.startRotationY = currentSelectedObject.rotation.y;
