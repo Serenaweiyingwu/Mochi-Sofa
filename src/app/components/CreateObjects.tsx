@@ -96,9 +96,9 @@ export async function loadGLB(
           resolve(model);
             },
             undefined,
-            (error: ErrorEvent) => {
-          console.error("Error loading GLB model:", error);
-          reject(error);
+            (error: unknown) => {
+                console.error("Error loading GLB model:", error);
+                reject(error);
             }
         );
     });
