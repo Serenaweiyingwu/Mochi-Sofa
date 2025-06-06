@@ -24,6 +24,29 @@ body {
   }
 }
 
+@media screen and (min-width: 520px) {
+  .gameContainer {
+    max-width: 340px;
+  }
+  .game-actions {
+    display: none;
+  }
+  .header-cart {
+    display: none;
+  }
+  .header-menu {
+    display: flex;
+  }
+  .header {
+    display: flex;
+  }
+  .game-page {
+    background-image: url('/images/furniture/Web_Game.svg');
+    background-size: contain;
+    background-repeat: repeat;
+  }
+}
+
 @media screen and (max-height: 620px) {
   .gameContainer {
     font-size: 10px;

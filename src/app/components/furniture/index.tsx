@@ -1,32 +1,54 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Scene from "../Scene";
 import DesignScoreModal from "./DesignScoreModal";
 import SideMenu from "./SideMenu";
+import {
+  useAddtoCart,
+  useCheckout,
+  useGetCart,
+  useGetCartLink,
+  useGetColorQuery,
+  useUpdateCart,
+} from "@/api/aroomy-api";
 
 const FurnitureCustomize = () => {
   const [sceneAPI, setSceneAPI] = useState<{
-    startPlacingSeat?: (selectedColorName: string) => void;
+    startPlacingSeat?: (
+      selectedColorName: string,
+      product_line_id: string
+    ) => void;
     startPlacingBackrest?: (selectedColorName: string) => void;
   }>({});
+  const [updateCart] = useUpdateCart();
+  const [getCart] = useGetCart();
+  const [checkout] = useCheckout();
+  const [addToCart] = useAddtoCart();
+  const [getCartLink] = useGetCartLink();
   const [selectedCategory] = useState("sofa");
   const [selectedColor, setSelectedColor] = useState("#FFD763");
   const [selectedColorName, setSelectedColorName] = useState("Grayish Brown");
   const [showBanner, setShowBanner] = useState(true);
+  const [cartItems, setCartItems] = useState<{id: string, quantity: number}[]>([]);
   const [showMenu, setShowMenu] = useState(false);
   const [showSocialLinks, setShowSocialLinks] = useState(false);
   const [showDesignScore, setShowDesignScore] = useState(false);
   const [showDiscount, setShowDiscount] = useState(false);
+  const [cartId, setCartId] = useState<string | null>(null);
+  const [variantId, setVariantId] = useState<number | null>(null);
+  const [getColors] = useGetColorQuery();
+  const [colors, setColors] = useState<
+    { id: string; value: string; variantId: number }[]
+  >([]);
   const [menuView, setMenuView] = useState<"menu" | "login">("menu");
   const colorContainerRef = useRef<HTMLDivElement>(null);
-
 
   const categories = [
     { id: "sofa", label: "Sofa" },
     { id: "backrest", label: "Backrest" },
   ];
 
-  const colors = [
+  const colorsMap = [
     { id: "Grayish Brown", value: "#72675b" },
     { id: "Dark Gray", value: "#4a4a4a" },
     { id: "Dark Brown", value: "#3d2b1f" },
@@ -48,12 +70,54 @@ const FurnitureCustomize = () => {
     { id: "Charcoal Gray", value: "#36454f" },
     { id: "Light Grey Blue", value: "#a3b6c4" },
     { id: "Mist Blue", value: "#646d8c" },
-    { id: "Deep Navy Blue", value: "#000080" }
+    { id: "Deep Navy Blue", value: "#000080" },
   ];
+  const fetchCart = async () => {
+    try {
+      const response = await getCart();
+      setCartId(response.id);
+      console.log("Cart data fetched:", response);
+    } catch (error) {
+      console.error("Error fetching cart data:", error);
+    }
+  };
 
-  const handleColorSelect = (colorValue: string, colorName: string) => {
+  const fetchColors = async () => {
+    try {
+      const response = await getColors();
+      console.log(response.product);
+      const colors = colorsMap
+        .filter((color) =>
+          response.product.variants.some(
+            (variant: { option1: string }) => variant.option1 === color.id
+          )
+        )
+        .map((color) => {
+          const variant = response.product.variants.find(
+            (variant: { option1: string }) => variant.option1 === color.id
+          );
+          return { ...color, variantId: variant ? variant.id : null };
+        });
+      setColors(colors);
+    } catch (error) {
+      console.error("Error fetching colors:", error);
+    }
+  };
+
+  useEffect(() => {
+    // Fetch cart data when component mounts
+    fetchCart();
+    fetchColors();
+  }, []);
+
+  const handleColorSelect = (
+    colorValue: string,
+    colorName: string,
+    variantId: number
+  ) => {
     setSelectedColor(colorValue);
     setSelectedColorName(colorName);
+    setVariantId(variantId);
   };
 
   const handleComplete = () => {
@@ -61,6 +125,19 @@ const FurnitureCustomize = () => {
     setShowDesignScore(true);
     console.log("Completed with:", { selectedCategory, selectedColor });
   };
+
+  const removePlacingSeat = useCallback(async (product_line_id: string) => {
+    console.log(cartItems)
+    const currentQuantity = cartItems.find(
+      (item) => item.id === product_line_id
+    )?.quantity || 0;
+    console.log(currentQuantity, "currentQuantity");
+    if (currentQuantity > 0) {
+      await updateCart(product_line_id, currentQuantity-1)
+      // Remove the item from the cart
+      console.log("Removed item from cart:", product_line_id);
+    }
+  }, [cartItems, updateCart]);
 
   const handleApplyDiscount = () => {
     // Toggle discount display
@@ -70,7 +147,21 @@ const FurnitureCustomize = () => {
 
   const handleCheckout = () => {
     // Checkout logic here
+    if (!cartId) {
+      console.error("No cart ID available for checkout");
+      return;
+    }
     console.log("Proceeding to checkout");
+    checkout(cartId)
+      .then((response) => {
+        // Redirect to the checkout URL
+        if (response && response.checkout_url) {
+          window.open(response.checkout_url, "_blank");
+        }
+      })
+      .catch((error) => {
+        console.error("Checkout error:", error);
+      });
     setShowDesignScore(false);
   };
 
@@ -84,22 +175,107 @@ const FurnitureCustomize = () => {
     setShowSocialLinks(!showSocialLinks);
   }
 
+  const handleAddToCart = async (cartItem: {
+    variant_id: string;
+    quantity: number;
+    properties: { title: string; variant: string; image: string };
+  }) => {
+    try {
+      const response = await addToCart(cartItem);
+      console.log("Item added to cart:", response.items);
+      setCartItems(() => [...response.items]);
+      // Optionally, you can fetch the updated cart after adding an item
+      const product_line_id =
+        response.items.find(
+          (item: { variant_id: string }) =>
+            item.variant_id === cartItem.variant_id
+        )?.id || null;
+      console.log("Product line ID found:", product_line_id);
+      if (product_line_id) {
+        sceneAPI?.startPlacingSeat?.(selectedColorName, product_line_id);
+      }
+    } catch (error) {
+      console.error("Error adding item to cart:", error);
+    }
+  };
+
   return (
     <>
       <div className="flex flex-col h-full min-h-screen bg-white relative">
         {/* Header */}
-        <header className="px-5 py-6 flex justify-between items-center">
-          <div className="w-40">
-            <Image
-              src="/images/logo/logo.png"
-              alt="Aroomy"
-              width={150}
-              height={42}
-              priority
-            />
+        <header className="px-5 py-6 flex items-center header justify-between bg-white w-full">
+          <div className="flex flex-row">
+            <div className="w-40">
+              <Image
+                src="/images/logo/logo.png"
+                alt="Aroomy"
+                width={150}
+                height={42}
+                priority
+              />
+            </div>
+            <div className="hidden flex-row header-menu gap-4">
+              <div>
+                <a href="/login" className="text-black font-extrabold text-xl">
+                  Sign-up/Log in
+                </a>
+              </div>
+              <div>
+                <a href="/tetris" className="text-black font-extrabold text-xl">
+                  Play Games
+                </a>
+              </div>
+              <div>
+                <a
+                  href="https://mall.aroomy.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-black font-extrabold text-xl"
+                >
+                  Aroomy Mall
+                </a>
+              </div>
+              <div>
+                <a
+                  href="https://mall.aroomy.com/mochi-sofa"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-black font-extrabold text-xl"
+                >
+                  Mochi Sofa
+                </a>
+              </div>
+              <div>
+                <a
+                  href="https://aroomy.com/support"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-black font-extrabold text-xl"
+                >
+                  Support
+                </a>
+              </div>
+            </div>
           </div>
           <div className="flex items-center">
-            <button className="relative p-2">
+            <button
+              onClick={() => {
+                if (!cartId) {
+                  window.open("https://281ca3-aa.myshopify.com/cart", "_blank");
+                  return;
+                }
+                getCartLink(cartId)
+                  .then((response) => {
+                    if (response && response.cart_url) {
+                      window.open(response.cart_url, "_blank");
+                    }
+                  })
+                  .catch((error) => {
+                    console.error("Error fetching cart link:", error);
+                  });
+              }}
+              className="relative p-2"
+            >
               <svg
                 width="24"
                 height="24"
@@ -125,7 +301,10 @@ const FurnitureCustomize = () => {
                 />
               </svg>
             </button>
-            <button className="p-2 ml-2" onClick={() => setShowMenu(true)}>
+            <button
+              className="p-2 header-cart ml-2"
+              onClick={() => setShowMenu(true)}
+            >
               <svg
                 width="24"
                 height="24"
@@ -203,7 +382,7 @@ const FurnitureCustomize = () => {
           </div>
           <div className="h-full">
             <div className="h-full w-full">
-              <Scene onSceneReady={setSceneAPI} />
+              <Scene removePlacingSeat={removePlacingSeat} onSceneReady={setSceneAPI} />
             </div>
           </div>
         </div>
@@ -216,29 +395,38 @@ const FurnitureCustomize = () => {
               const imagePath = `/preview/${imageName}`;
 
               return (
-                  <div key={category.id} className="flex flex-col items-center">
-                    <button
-                        onClick={() => {
-                          if (category.id === "sofa") {
-                            sceneAPI?.startPlacingSeat?.(selectedColorName);
-                          } else {
-                            sceneAPI?.startPlacingBackrest?.(selectedColorName);
-                          }
-                        }}
-                        key={category.id}
-                        className={`relative flex p-0 w-24 h-20 flex-col items-center justify-center rounded-[20px] border-2 overflow-hidden border-[#5CB2D180]`}
-                        style={{
-                          backgroundImage: `url(${imagePath})`,
-                          backgroundSize: "cover",
-                          backgroundPosition: "center",
-                          backgroundRepeat: "no-repeat",
-                        }}
-                        aria-label={`Preview of ${selectedColorName} ${category.label}`}
-                    ></button>
-                    <span className="text-center text-xl font-normal mt-1">
-          {category.label}
-        </span>
-                  </div>
+                <div key={category.id} className="flex flex-col items-center">
+                  <button
+                    onClick={() => {
+                      if (category.id === "sofa") {
+                        const cartItem = {
+                          variant_id: `gid://shopify/ProductVariant/${variantId}`,
+                          quantity: 1,
+                          properties: {
+                            title: selectedColorName,
+                            variant: selectedColorName,
+                            image: "",
+                          },
+                        };
+                        handleAddToCart(cartItem);
+                      } else {
+                        sceneAPI?.startPlacingBackrest?.(selectedColorName);
+                      }
+                    }}
+                    key={category.id}
+                    className={`relative flex p-0 w-24 h-20 flex-col items-center justify-center rounded-[20px] border-2 overflow-hidden border-[#5CB2D180]`}
+                    style={{
+                      backgroundImage: `url(${imagePath})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                      backgroundRepeat: "no-repeat",
+                    }}
+                    aria-label={`Preview of ${selectedColorName} ${category.label}`}
+                  ></button>
+                  <span className="text-center text-xl font-normal mt-1">
+                    {category.label}
+                  </span>
+                </div>
               );
             })}
           </div>
@@ -248,52 +436,54 @@ const FurnitureCustomize = () => {
             <h2 className="text-xl font-extrabold mb-3">Color</h2>
             <div className="flex">
               <div
-                  ref={colorContainerRef}
-                  className="flex items-center gap-6 overflow-x-auto py-2 px-1 scroll-smooth"
+                ref={colorContainerRef}
+                className="flex items-center gap-6 overflow-x-auto py-2 px-1 scroll-smooth"
               >
                 {colors.map((color, index) => (
-                    <button
-                        key={color.id}
-                        className={`w-10 h-10 p-0 rounded-full border-[#E6E6E6] flex-shrink-0 ${
-                            selectedColor === color.value ? "border-4" : "border-1"
-                        }`}
-                        style={{backgroundColor: color.value}}
-                        onClick={() => handleColorSelect(color.value, color.id)}
-                        aria-label={`Select ${color.id} color`}
-                    >
-                      {index < 5 && (
-                          <span className="sr-only">{color.id} color</span>
-                      )}
-                    </button>
+                  <button
+                    key={color.id}
+                    className={`w-10 h-10 p-0 rounded-full border-[#E6E6E6] flex-shrink-0 ${
+                      selectedColor === color.value ? "border-4" : "border-1"
+                    }`}
+                    style={{ backgroundColor: color.value }}
+                    onClick={() =>
+                      handleColorSelect(color.value, color.id, color.variantId)
+                    }
+                    aria-label={`Select ${color.id} color`}
+                  >
+                    {index < 5 && (
+                      <span className="sr-only">{color.id} color</span>
+                    )}
+                  </button>
                 ))}
               </div>
               <button
-                  onClick={handleColorScroll}
-                  className="flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity ml-1"
-                  aria-label="Scroll colors"
+                onClick={handleColorScroll}
+                className="flex-shrink-0 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity ml-1"
+                aria-label="Scroll colors"
               >
                 <svg
-                    width="21"
-                    height="32"
-                    viewBox="0 0 21 32"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
+                  width="21"
+                  height="32"
+                  viewBox="0 0 21 32"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
                 >
                   <rect
-                      x="20.5"
-                      y="31"
-                      width="20"
-                      height="30"
-                      rx="10"
-                      transform="rotate(180 20.5 31)"
-                      fill="white"
-                      stroke="#DAE8EE"
+                    x="20.5"
+                    y="31"
+                    width="20"
+                    height="30"
+                    rx="10"
+                    transform="rotate(180 20.5 31)"
+                    fill="white"
+                    stroke="#DAE8EE"
                   />
                   <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M8.40717 21.9053C8.11428 21.6124 8.11428 21.1376 8.40717 20.8447L12.7518 16.5L8.40717 12.1553C8.11428 11.8624 8.11428 11.3876 8.40717 11.0947C8.70006 10.8018 9.17494 10.8018 9.46783 11.0947L13.8125 15.4393C14.3983 16.0251 14.3983 16.9749 13.8125 17.5607L9.46783 21.9053C9.17494 22.1982 8.70006 22.1982 8.40717 21.9053Z"
-                      fill="#6F767E"
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M8.40717 21.9053C8.11428 21.6124 8.11428 21.1376 8.40717 20.8447L12.7518 16.5L8.40717 12.1553C8.11428 11.8624 8.11428 11.3876 8.40717 11.0947C8.70006 10.8018 9.17494 10.8018 9.46783 11.0947L13.8125 15.4393C14.3983 16.0251 14.3983 16.9749 13.8125 17.5607L9.46783 21.9053C9.17494 22.1982 8.70006 22.1982 8.40717 21.9053Z"
+                    fill="#6F767E"
                   />
                 </svg>
               </button>
@@ -301,8 +491,8 @@ const FurnitureCustomize = () => {
           </div>
           <div className="px-6 py-8 pt-0">
             <button
-                onClick={handleComplete}
-                className="w-full py-3 px-4 bg-[#5CB2D1] text-white font-medium rounded-md transition duration-200"
+              onClick={handleComplete}
+              className="w-full py-3 px-4 bg-[#5CB2D1] text-white font-medium rounded-md transition duration-200"
             >
               Complete
             </button>
@@ -314,34 +504,34 @@ const FurnitureCustomize = () => {
 
       {/* Design Score Modal */}
       <DesignScoreModal
-          isOpen={showDesignScore}
-          onClose={() => {
-            setShowDesignScore(false);
-            setShowDiscount(false);
-          }}
-          onApplyDiscount={handleApplyDiscount}
-          onCheckout={handleCheckout}
-          showDiscount={showDiscount}
+        isOpen={showDesignScore}
+        onClose={() => {
+          setShowDesignScore(false);
+          setShowDiscount(false);
+        }}
+        onApplyDiscount={handleApplyDiscount}
+        onCheckout={handleCheckout}
+        showDiscount={showDiscount}
       />
 
       {/* Side Menu Background Overlay */}
       <div
-          className={`fixed inset-0 bg-black transition-opacity duration-500 z-40 ${
-              showMenu
-                  ? "bg-opacity-50 opacity-100"
-                  : "bg-opacity-0 opacity-0 pointer-events-none"
-          }`}
-          onClick={() => setShowMenu(false)}
+        className={`fixed inset-0 bg-black transition-opacity duration-500 z-40 ${
+          showMenu
+            ? "bg-opacity-50 opacity-100"
+            : "bg-opacity-0 opacity-0 pointer-events-none"
+        }`}
+        onClick={() => setShowMenu(false)}
       />
 
       {/* Slide Panel Container */}
       <SideMenu
-          isOpen={showMenu}
-          onClose={() => setShowMenu(false)}
-          showSocialLinks={showSocialLinks}
-          toggleSocialLinks={toggleSocialLinks}
-          menuView={menuView}
-          setMenuView={setMenuView}
+        isOpen={showMenu}
+        onClose={() => setShowMenu(false)}
+        showSocialLinks={showSocialLinks}
+        toggleSocialLinks={toggleSocialLinks}
+        menuView={menuView}
+        setMenuView={setMenuView}
       />
     </>
   );

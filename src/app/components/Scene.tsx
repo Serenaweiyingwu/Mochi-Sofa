@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect, useRef} from "react";
+import {useCallback, useEffect, useRef} from "react";
 import * as THREE from "three";
 import {OBB} from "three/examples/jsm/math/OBB.js";
 import initialize from "@/app/components/Initialization";
@@ -11,15 +11,18 @@ import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRe
 import { createCustomGizmo } from "@/app/components/CustomTransformGizmo";
 
 type SceneProps = {
+  removePlacingSeat: (product_line_id: string) => void;
     onSceneReady?: (api: {
         startPlacingBackrest: (selectedColor: string) => void;
-        startPlacingSeat: (selectedColor: string) => void;
+        startPlacingSeat: (selectedColor: string, product_line_id: string) => void;
     }) => void;
 };
 
-export default function Scene({ onSceneReady}: SceneProps){
+export default function Scene({ onSceneReady, removePlacingSeat}: SceneProps){
     const containerRef = useRef<HTMLDivElement>(null);
-
+    const handleRemove = useCallback((id: string) => {
+      removePlacingSeat(id)
+    }, [removePlacingSeat])
     useEffect(() => {
         const container = containerRef.current;
         if (!container) return;
@@ -213,12 +216,11 @@ export default function Scene({ onSceneReady}: SceneProps){
             target.userData.deleteLabel = label;
 
             button.onclick = () => {
-
                 if (target.userData.customGizmo) {
                     scene.remove(target.userData.customGizmo);
                     target.userData.customGizmo = null;
                 }
-
+                handleRemove(target.userData.product_line_id);
                 target.remove(label);
                 target.userData.deleteLabel = null;
                 target.userData.hasDeleteButton = false;
@@ -424,7 +426,7 @@ export default function Scene({ onSceneReady}: SceneProps){
 
 
         onSceneReady?.({
-            startPlacingSeat: async (selectedColor) => {
+            startPlacingSeat: async (selectedColor, product_line_id) => {
                 const selectedColorName = selectedColor.replace(/\s+/g, "_");
                 console.log(`/textures/Cushion/${selectedColorName}`);
                 const seat = await loadGLB(
@@ -434,6 +436,7 @@ export default function Scene({ onSceneReady}: SceneProps){
                 );
 
                 seat.position.y = 0.35;
+                seat.userData.product_line_id = product_line_id;
                 scene.add(seat);
                 placingBox = seat;
                 placingYOffset = 0.35;

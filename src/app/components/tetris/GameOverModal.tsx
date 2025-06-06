@@ -162,7 +162,7 @@ const GameOverModal: React.FC<GameOverModalProps> = ({
               Try again
             </button>
 
-            {points !== 0 && <button
+            {calculateDiscount(points) !== 0 && <button
               onClick={onTakeOffer}
               className="bg-[#1A305B] text-base text-white font-extrabold p-3 rounded-lg flex gap-1 items-center justify-center w-[45%]"
             >
