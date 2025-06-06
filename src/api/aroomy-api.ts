@@ -135,7 +135,7 @@ export const useInviteMutation = () => {
 export const useGetCart = () => {
   const cartResponse = async () => {
     const response = await authenticatedGameRequest(`/api/shopify/cart`, {
-      method: "GET",
+      method: "POST",
     });
 
     return response;

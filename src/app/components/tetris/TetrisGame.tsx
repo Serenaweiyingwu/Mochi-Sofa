@@ -8,7 +8,11 @@ import RulesModal from "./RulesModal";
 import InviteModal from "./InviteModal";
 import CouponModal from "./CouponModal";
 import Image from "next/image";
-import { useCompleteGameMutation, useGetInviteQuery, useGetCouponMutation } from "@/api/aroomy-api";
+import {
+  useCompleteGameMutation,
+  useGetInviteQuery,
+  useGetCouponMutation,
+} from "@/api/aroomy-api";
 import { message } from "antd";
 import { useRouter } from "next/navigation";
 
@@ -31,7 +35,7 @@ const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
   const [showRules, setShowRules] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [showCouponModal, setShowCouponModal] = useState(false);
-  const [getInvite] = useGetInviteQuery(inviteCode || '');
+  const [getInvite] = useGetInviteQuery(inviteCode || "");
   const scoreRef = useRef<HTMLSpanElement>(null);
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
@@ -41,74 +45,81 @@ const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
   const [getCoupon] = useGetCouponMutation(userId);
   const [couponCode, setCouponCode] = useState<string>("");
   useEffect(() => {
-    const userInfo = localStorage.getItem('user_info');
+    const userInfo = localStorage.getItem("user_info");
     if (userInfo) {
       const user = JSON.parse(userInfo);
       setUserId(user.id);
-    } 
+    }
   }, []);
 
-  const handleGetCoupon = React.useCallback(async (init?: boolean) => {
-    const res = await getCoupon();
-    if (res.coupons.length > 0 && init) {
-      gameController?.pause();
-      setCouponCode(res.coupons[0].discount_code);
+  const handleGetCoupon = React.useCallback(
+    async (init?: boolean) => {
+      const res = await getCoupon();
+      if (res.coupons.length > 0 && init) {
+        gameController?.pause();
+        setCouponCode(res.coupons[0].discount_code);
+        setShowCouponModal(true);
+        return;
+      }
+      if (init) {
+        return;
+      }
+      if (res.coupons.length > 0) {
+        setCouponCode(res.coupons[0].discount_code);
+      }
       setShowCouponModal(true);
-      return
-    }
-    if (init) {
-      return;
-    }
-    if (res.coupons.length > 0) {
-      setCouponCode(res.coupons[0].discount_code);
-    }
-    setShowCouponModal(true);
-
-  }, [getCoupon, gameController]);
+    },
+    [getCoupon, gameController]
+  );
 
   useEffect(() => {
-    if (userId){
-      handleGetCoupon(true)
+    if (userId) {
+      handleGetCoupon(true);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId])
-  
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
+
   const isUserLoggedIn = () => {
     return userId !== "" && userId !== undefined;
   };
-  
+
   useEffect(() => {
     if (inviteCode && userId && isUserLoggedIn()) {
-      const processedInvites = JSON.parse(localStorage.getItem('processedInvites') || '[]');
+      const processedInvites = JSON.parse(
+        localStorage.getItem("processedInvites") || "[]"
+      );
       if (inviteCode === userId) {
         return;
       }
-      
+
       if (!processedInvites.includes(inviteCode)) {
         processedInvites.push(inviteCode);
-        localStorage.setItem('processedInvites', JSON.stringify(processedInvites));
-        
+        localStorage.setItem(
+          "processedInvites",
+          JSON.stringify(processedInvites)
+        );
+
         completeInvitation();
       }
     }
-  
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inviteCode, userId]);
-  
+
   const completeInvitation = async () => {
     if (!isUserLoggedIn()) {
       return;
     }
-    
+
     try {
       await getInvite();
       setInvitationSuccess(true);
       setTimeout(() => setInvitationSuccess(false), 3000);
     } catch (error) {
-      console.log('Error completing invitation:', error);
+      console.log("Error completing invitation:", error);
     }
   };
-  
+
   useEffect(() => {
     if (scoreRef.current) {
       scoreRef.current.textContent = String(score);
@@ -129,23 +140,26 @@ const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
       return 0;
     };
     try {
-      completeGame({invitation_id: !selfComplete ? inviteCode || "" : '', score: calculateDiscount(score), user_id: userId})
+      completeGame({
+        invitation_id: !selfComplete ? inviteCode || "" : "",
+        score: calculateDiscount(score),
+        user_id: userId,
+      });
       if (selfComplete) {
         handleGetCoupon();
       }
     } catch (error) {
-      console.log('Error completing game:', error);
-      message.error('Error completing game');
+      console.log("Error completing game:", error);
+      message.error("Error completing game");
     }
-  }
+  };
 
-  const handleTryAgain = (controller: {restart: () => void}) => {
+  const handleTryAgain = (controller: { restart: () => void }) => {
     if (likes > 0) {
       setLikes((prev) => prev - 1);
       controller.restart();
     }
   };
-
 
   const handleShareForLives = () => {
     setLikes((prev) => prev + 2);
@@ -161,19 +175,19 @@ const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
     }
     setShowInviteModal(true);
   };
-  
+
   const handleSendInvite = () => {
-    const sentInvites = JSON.parse(localStorage.getItem('sentInvites') || '[]');
+    const sentInvites = JSON.parse(localStorage.getItem("sentInvites") || "[]");
     sentInvites.push(new Date().toISOString());
-    localStorage.setItem('sentInvites', JSON.stringify(sentInvites));
+    localStorage.setItem("sentInvites", JSON.stringify(sentInvites));
     setShowInviteModal(false);
   };
 
   return (
     <div className="w-full">
-      <div className="bg-[#0F2A4A] text-white rounded-lg overflow-hidden shadow-xl">
+      <div className="bg-[#0F2A4A] game-page text-white rounded-lg overflow-hidden shadow-xl">
         <div className="p-4 pb-2">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-center mb-4">
             <div>
               <div className="flex justify-between">
                 <div className="text-[#5CB2D1] flex gap-1 text-2xl font-bold">
@@ -224,7 +238,7 @@ const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
                   >
                     Coupon
                   </button>
-                  <button 
+                  <button
                     className="flex flex-col justify-end"
                     onClick={() => setShowRules(true)}
                   >
@@ -256,32 +270,6 @@ const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
             className="rounded-lg p-0 mb-4 overflow-hidden relative"
             style={{ height: "calc(70vh - 40px)", maxHeight: "600px" }}
           >
-            <div className="flex absolute top-[1px] right-0 justify-end items-center">
-              <button className="flex items-center text-white">
-                <span className="mr-1">{likes}</span>
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-                    stroke="white"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </button>
-            </div>
-            <div
-              className="bg-[#CBF1FF] relative top-[1px] w-[144px] text-[#0F2A4A] px-4 py-2  font-bold"
-              style={{ borderRadius: "12px 12px 0px 0px" }}
-            >
-              Score: <span ref={scoreRef}>{score}</span>
-            </div>
             <Tetris
               keyboardControls={{
                 down: "MOVE_DOWN",
@@ -297,7 +285,6 @@ const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
               }}
             >
               {({ Gameboard, points, state, controller }) => {
-                 
                 useEffect(() => {
                   setScore(points);
                   if (state === "LOST") {
@@ -315,16 +302,42 @@ const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
                 }, [controller]);
 
                 return (
-                  <>
-                    <div
-                      className={`gameContainer border-4 border-[#CBF1FF]`}
-                    >
-                      <Gameboard />
+                  <div className="flex justify-center flex-col items-center">
+                    <div className={`gameContainer relative`}>
+                      <div className="flex max-w-[340px] right-0 justify-between items-center">
+                        <div
+                          className="bg-[#CBF1FF] relative top-[1px] w-[144px] text-[#0F2A4A] px-4 py-2  font-bold"
+                          style={{ borderRadius: "12px 12px 0px 0px" }}
+                        >
+                          Score: <span ref={scoreRef}>{score}</span>
+                        </div>
+                        <button className="flex items-center text-white">
+                          <span className="mr-1">{likes}</span>
+                          <svg
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                              stroke="white"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                      <div className=" border-[#CBF1FF]  border-4 ">
+                        <Gameboard />
+                      </div>
 
                       <GameOverModal
                         isOpen={isOpen}
                         onClose={() => {
-                          setIsOpen(false)
+                          setIsOpen(false);
                         }}
                         points={score}
                         onTryAgain={() => handleTryAgain(controller)}
@@ -338,7 +351,7 @@ const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
                       />
                     </div>
 
-                    <div className="flex justify-between mb-4 mt-2.5">
+                    <div className="flex game-actions w-full justify-between mb-4 mt-2.5">
                       <button
                         className="bg-[#5CB2D1] p-3 w-11 h-11 flex justify-center items-center rounded-md"
                         onClick={() => controller.moveRight()}
@@ -452,79 +465,105 @@ const TetrisGame: React.FC<TetrisGameProps> = ({ inviteCode }) => {
                         </svg>
                       </button>
                     </div>
-                  </>
+                  </div>
                 );
               }}
             </Tetris>
           </div>
-
-          <button
-            onClick={handleInviteFriend}
-            className="w-full bg-[#5CB2D1] text-white py-3 px-4 rounded-md flex items-center justify-center mb-4"
-          >
-            <svg
-              className="mr-2"
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+          <div className="flex justify-center items-center">
+            <button
+              onClick={handleInviteFriend}
+              className="max-w-[376px] bg-[#5CB2D1] text-white py-3 px-4 rounded-md flex items-center justify-center mb-4"
             >
-              <path
-                d="M15 15.5V17.5C15 18.0523 14.5523 18.5 14 18.5H3C2.44772 18.5 2 18.0523 2 17.5V6.5C2 5.94772 2.44772 5.5 3 5.5H5"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M8 12.5L18 2.5"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M13 2.5H18V7.5"
-                stroke="white"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            Invite your friend for more discount
-          </button>
+              <svg
+                className="mr-2"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M15 15.5V17.5C15 18.0523 14.5523 18.5 14 18.5H3C2.44772 18.5 2 18.0523 2 17.5V6.5C2 5.94772 2.44772 5.5 3 5.5H5"
+                  stroke="white"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M8 12.5L18 2.5"
+                  stroke="white"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M13 2.5H18V7.5"
+                  stroke="white"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Invite your friend for more discount
+            </button>
+          </div>
         </div>
       </div>
 
       <RulesModal isOpen={showRules} onClose={() => setShowRules(false)} />
-      
-      <InviteModal 
-        isOpen={showInviteModal} 
-        onClose={() => setShowInviteModal(false)} 
+
+      <InviteModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
         inviterId={userId}
       />
-      
+
       <CouponModal
         couponCode={couponCode}
         handleSendInvite={handleSendInvite}
         isOpen={showCouponModal}
         onClose={() => setShowCouponModal(false)}
       />
-      
+
       {invitationSuccess && (
         <div className="fixed bottom-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-lg z-50 animate-fade-in-up">
           <div className="flex items-center">
-            <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+            <svg
+              className="w-6 h-6 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M5 13l4 4L19 7"
+              ></path>
             </svg>
-            <p>Invitation successful! You and your friend will both receive 5% off.</p>
-            <button 
-              onClick={() => setInvitationSuccess(false)} 
+            <p>
+              Invitation successful! You and your friend will both receive 5%
+              off.
+            </p>
+            <button
+              onClick={() => setInvitationSuccess(false)}
               className="ml-4 text-white hover:text-gray-200"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                ></path>
               </svg>
             </button>
           </div>

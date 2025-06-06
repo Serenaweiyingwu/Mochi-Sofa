@@ -31,7 +31,7 @@ const FurnitureCustomize = () => {
   const [cartId, setCartId] = useState<string | null>(null);
   const [variantId, setVariantId] = useState<number | null>(null);
   const [getColors] = useGetColorQuery();
-  const [colors, setColors] = useState<{ id: string; value: string, variantId: number }[]>([]); 
+  const [colors, setColors] = useState<{ id: string; value: string, variantId: number }[]>([]);
   const [menuView, setMenuView] = useState<"menu" | "login">("menu");
   const colorContainerRef = useRef<HTMLDivElement>(null);
 
@@ -85,7 +85,7 @@ const FurnitureCustomize = () => {
         )
       ).map((color) => {
         const variant = response.product.variants.find((variant: { option1: string }) => variant.option1 === color.id);
-        return {...color, variantId: variant ? variant.id : null };
+        return { ...color, variantId: variant ? variant.id : null };
       });
       setColors(colors);
     } catch (error) {
@@ -151,7 +151,7 @@ const FurnitureCustomize = () => {
     <>
       <div className="flex flex-col h-full min-h-screen bg-white relative">
         {/* Header */}
-        <header className="px-5 py-6 flex justify-between items-center">
+        <header className="px-5 py-6 flex items-center header justify-between bg-white w-full">
           <div className="w-40">
             <Image
               src="/images/logo/logo.png"
@@ -161,7 +161,49 @@ const FurnitureCustomize = () => {
               priority
             />
           </div>
-          <div className="flex items-center">
+          <div className="hidden flex-row header-menu gap-4">
+          <div>
+              <a href="/login" className="text-black font-extrabold text-xl">
+              Sign-up/Log in
+              </a>
+            </div>
+            <div>
+              <a href="/tetris" className="text-black font-extrabold text-xl">
+                Play Games
+              </a>
+            </div>
+            <div>
+              <a
+                href="https://mall.aroomy.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-black font-extrabold text-xl"
+              >
+                Aroomy Mall
+              </a>
+            </div>
+            <div>
+              <a
+                href="https://mall.aroomy.com/mochi-sofa"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-black font-extrabold text-xl"
+              >
+                Mochi Sofa
+              </a>
+            </div>
+            <div>
+              <a
+                href="https://aroomy.com/support"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-black font-extrabold text-xl"
+              >
+                Support
+              </a>
+            </div>
+          </div>
+          <div className="flex header-cart items-center">
             <button
               onClick={() => {
                 if (!cartId) {
