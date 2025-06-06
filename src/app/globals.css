@@ -39,7 +39,6 @@ body {
   }
   .header {
     display: flex;
-    justify-content:normal;
   }
   .game-page {
     background-image: url('/images/furniture/Web_Game.svg');

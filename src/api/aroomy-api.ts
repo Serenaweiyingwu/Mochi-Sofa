@@ -144,6 +144,18 @@ export const useGetCart = () => {
   return [cartResponse];
 };
 
+export const useUpdateCart = () => {
+  const updateCartResponse = async (lineItemId: string, quantity: number) => {
+    const response = await authenticatedGameRequest(`/api/shopify/cart/items?line_item_id=${lineItemId}&quantity=${quantity}`, {
+      method: "PUT",
+    });
+
+    return response;
+  };
+
+  return [updateCartResponse];
+};
+
 export const useGetCartLink = () => {
   const cartLinkResponse = async (cart_id: string) => {
     const response = await authenticatedGameRequest(`/api/shopify/generate-cart-link`, {
